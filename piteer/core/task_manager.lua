@@ -18,7 +18,7 @@ end
 
 local last_call_time = 0.0
 local last_check_time = 0.0
-local check_interval = 0.1 -- seconds
+local check_interval = 0.01 -- seconds
 
 local function shouldCheckTask()
     local current_time = os.time()
