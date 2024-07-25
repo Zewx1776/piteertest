@@ -9,7 +9,7 @@ local last_open  = 0
 local task       = {
     name = "Open Pit",
     shouldExecute = function()
-        console.print("Checking if the task 'Open Pit' should be executed.")
+        --console.print("Checking if the task 'Open Pit' should be executed.")
         return utils.player_in_zone("Scos_Cerrigar") and not utils.get_pit_portal()
     end,
     Execute = function()

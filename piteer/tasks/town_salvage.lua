@@ -4,7 +4,7 @@ local enums = require "data.enums"
 local task  = {
     name = "Town Salvage",
     shouldExecute = function()
-        console.print("Checking if the task 'Town Salvage' should be executed.")
+        --console.print("Checking if the task 'Town Salvage' should be executed.")
         return utils.player_in_zone("Scos_Cerrigar") and get_local_player():get_item_count() >= 20
     end,
     Execute = function()

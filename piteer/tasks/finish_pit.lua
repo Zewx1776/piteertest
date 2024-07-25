@@ -7,7 +7,7 @@ local start_time = 0
 local task = {
     name = "Finish Pit",
     shouldExecute = function()
-        console.print("Checking if the task 'Finish Pit' should be executed.")
+        --console.print("Checking if the task 'Finish Pit' should be executed.")
         return utils.player_on_quest(enums.quests.pit_started) and 
                not utils.player_on_quest(enums.quests.pit_ongoing) and
                utils.loot_on_floor()
@@ -36,7 +36,7 @@ local task = {
         end
 
         -- Check if 5 seconds have passed
-        if get_time_since_inject() - start_time > 5 then
+        if get_time_since_inject() - start_time > 15 then
             console.print("5 seconds have passed, resetting start time and task running flag.")
             start_time = 0  -- Reset the start time for the next execution
             explorer.is_task_running = false  -- Reset the flag

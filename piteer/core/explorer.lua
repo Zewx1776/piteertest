@@ -77,14 +77,14 @@ local explorer = {
 }
 local explored_areas = {}
 local target_position = nil
-local grid_size = 1            -- Größe der Rasterzellen in Metern
-local exploration_radius = 8      -- Radius, in dem Bereiche als erkundet gelten
-local explored_buffer = 2         -- Puffer um erkundete Bereiche in Metern
-local max_target_distance = 120    -- Maximale Entfernung für ein neues Ziel
+local grid_size = 1            -- Size of grid cells in meters
+local exploration_radius = 6   -- Radius in which areas are considered explored
+local explored_buffer = 2      -- Buffer around explored areas in meters
+local max_target_distance = 120 -- Maximum distance for a new target
 local target_distance_states = {120, 40, 20, 5}
 local target_distance_index = 1
-local unstuck_target_distance = 5 -- Maximale Entfernung für ein Unstuck-Ziel
-local stuck_threshold = 4         -- Sekunden, bevor der Charakter als "steckengeblieben" gilt
+local unstuck_target_distance = 5 -- Maximum distance for an unstuck target
+local stuck_threshold = 4      -- Seconds before the character is considered "stuck"
 local last_position = nil
 local last_move_time = 0
 local last_explored_targets = {}
@@ -185,9 +185,9 @@ local function check_walkable_area()
 
                 if utility.is_point_walkeable(point) then
                     if is_point_in_explored_area(point) then
-                   --     graphics.text_3d("explored", point, 15, color_white(128))
+                        --graphics.text_3d("Explored", point, 15, color_white(128))
                     else
-                    --    graphics.text_3d("unexplored", point, 15, color_green(255))
+                        --graphics.text_3d("unexplored", point, 15, color_green(255))
                     end
                 end
             end
@@ -478,14 +478,13 @@ local function get_neighbors(point)
 end
 
 local function reconstruct_path(came_from, current)
-    --console.print("Reconstructing path.")
     local path = { current }
     while came_from[get_grid_key(current)] do
         current = came_from[get_grid_key(current)]
         table.insert(path, 1, current)
     end
 
-    -- Remove points in a straight line
+    -- Filter points with a less aggressive approach
     local filtered_path = { path[1] }
     for i = 2, #path - 1 do
         local prev = path[i - 1]
@@ -495,14 +494,20 @@ local function reconstruct_path(came_from, current)
         local dir1 = { x = curr:x() - prev:x(), y = curr:y() - prev:y() }
         local dir2 = { x = next:x() - curr:x(), y = next:y() - curr:y() }
 
-        if dir1.x * dir2.y ~= dir1.y * dir2.x then
+        -- Calculate the angle between directions
+        local dot_product = dir1.x * dir2.x + dir1.y * dir2.y
+        local magnitude1 = math.sqrt(dir1.x^2 + dir1.y^2)
+        local magnitude2 = math.sqrt(dir2.x^2 + dir2.y^2)
+        local angle = math.acos(dot_product / (magnitude1 * magnitude2))
+
+        -- Keep points if the angle is greater than a threshold (e.g., 15 degrees)
+        if angle > math.rad(40) then
             table.insert(filtered_path, curr)
         end
     end
     table.insert(filtered_path, path[#path])
 
     return filtered_path
-    --return path
 end
 
 local function a_star(start, goal)
@@ -565,13 +570,13 @@ end
 local last_a_star_call = 0.0
 local function move_to_target()
     --console.print("Moving to target.")
-    --if explorer.is_task_running then
-       -- return  -- Do not set a path if a task is running
-  --  end
+    if explorer.is_task_running then
+    return  -- Do not set a path if a task is running
+    end
 
     if target_position then
         local player_pos = get_player_position()
-        if calculate_distance(player_pos, target_position) > 200 then
+        if calculate_distance(player_pos, target_position) > 500 then
             target_position = find_target(false)
             current_path = {}
             path_index = 1
@@ -627,7 +632,7 @@ local function move_to_target()
 end
 
 local function check_if_stuck()
-    console.print("Checking if character is stuck.")
+    --console.print("Checking if character is stuck.")
     local current_pos = get_player_position()
     local current_time = os.time()
 
