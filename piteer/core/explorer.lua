@@ -77,7 +77,7 @@ local explorer = {
 }
 local explored_areas = {}
 local target_position = nil
-local grid_size = 1            -- Size of grid cells in meters
+local grid_size = 1.5            -- Size of grid cells in meters
 local exploration_radius = 10   -- Radius in which areas are considered explored
 local explored_buffer = 2      -- Buffer around explored areas in meters
 local max_target_distance = 120 -- Maximum distance for a new target
@@ -216,7 +216,7 @@ end
 
 local function is_near_wall(point)
     --console.print("Checking if point is near wall.")
-    local wall_check_distance = 2 -- Abstand zur Überprüfung von Wänden
+    local wall_check_distance = 1 -- Abstand zur Überprüfung von Wänden
     local directions = {
         { x = 1, y = 0 }, { x = -1, y = 0 }, { x = 0, y = 1 }, { x = 0, y = -1 },
         { x = 1, y = 1 }, { x = 1, y = -1 }, { x = -1, y = 1 }, { x = -1, y = -1 }
@@ -340,8 +340,8 @@ local function find_explored_direction_target()
 
     while attempts < max_attempts do
         local direction_vector = vec3:new(
-            exploration_direction.x * max_target_distance * 0.3 ,
-            exploration_direction.y * max_target_distance * 0.3,
+            exploration_direction.x * max_target_distance * 0.5 ,
+            exploration_direction.y * max_target_distance * 0.5,
             0
         )
         local target_point = player_pos + direction_vector
@@ -648,6 +648,8 @@ local function check_if_stuck()
 
     return false
 end
+
+explorer.check_if_stuck = check_if_stuck
 
 function explorer:set_custom_target(target)
     --console.print("Setting custom target.")
