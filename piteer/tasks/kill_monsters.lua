@@ -23,7 +23,7 @@ local task = {
 
         -- local objective_id = auto_play.get_objective()
         -- if objective_id == objective.fight then
-            auto_play.set_tmp_override(get_time_since_inject() + 0.20)
+            -- auto_play.set_tmp_override(get_time_since_inject() + 0.20)
         -- end
 
         if not within_distance then

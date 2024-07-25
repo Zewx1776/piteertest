@@ -78,7 +78,7 @@ local explorer = {
 local explored_areas = {}
 local target_position = nil
 local grid_size = 1            -- Size of grid cells in meters
-local exploration_radius = 6   -- Radius in which areas are considered explored
+local exploration_radius = 10   -- Radius in which areas are considered explored
 local explored_buffer = 2      -- Buffer around explored areas in meters
 local max_target_distance = 120 -- Maximum distance for a new target
 local target_distance_states = {120, 40, 20, 5}
@@ -253,7 +253,7 @@ local function find_central_unexplored_target()
 
             point = set_height_of_valid_position(point)
 
-            if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) and not is_near_wall(point) then
+            if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) then
                 table.insert(unexplored_points, point)
                 min_x = math.min(min_x, point:x())
                 max_x = math.max(max_x, point:x())
@@ -300,7 +300,7 @@ local function find_random_explored_target()
         end
     end
 
-    if #explored_points == 0 then
+    if #explored_points == 0 then   
         return nil
     end
 
@@ -331,17 +331,17 @@ local function add_to_last_targets(point)
 end
 
 local function find_explored_direction_target()
-    --console.print("Finding explored direction target.")
+    console.print("Finding explored direction target.")
     local player_pos = get_player_position()
-    local max_attempts = 20
+    local max_attempts = 200
     local attempts = 0
     local best_target = nil
     local best_distance = 0
 
     while attempts < max_attempts do
         local direction_vector = vec3:new(
-            exploration_direction.x * max_target_distance,
-            exploration_direction.y * max_target_distance,
+            exploration_direction.x * max_target_distance * 0.3 ,
+            exploration_direction.y * max_target_distance * 0.3,
             0
         )
         local target_point = player_pos + direction_vector
@@ -401,7 +401,7 @@ local function find_unstuck_target()
 end
 
 local function find_target(include_explored)
-    --console.print("Finding target.")
+    console.print("Finding target.")
     last_movement_direction = nil -- Reset the last movement direction
 
     if include_explored then
