@@ -1,3 +1,8 @@
+Beta Version 0.14
+-fixed stuck while kill monsters active
+-changed grid size to 1.5 (again) should improve performance at the cost of a few more stucks, but should get unstuck. 
+
+
 Beta Version 0.13
 -fixed bug with explored target finding
 -improved target selection to help target portal rooms with close walls. 
