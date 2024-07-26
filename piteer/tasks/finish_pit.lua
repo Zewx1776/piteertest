@@ -43,6 +43,7 @@ local task = {
             return task
         end
 
+        explorer.is_task_running = false  -- Reset the flag
         return task
     end
 }
