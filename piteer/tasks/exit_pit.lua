@@ -34,11 +34,11 @@ local task = {
         -- Check if the player is no longer on the quest 'pit_started'
         if not utils.player_on_quest(enums.quests.pit_started) then
             console.print("Player is no longer on the quest 'pit_started'. Exiting task.")
-            --explorer.is_task_running = false  -- Reset the flag
+            explorer.is_task_running = false  -- Reset the flag
             return task
         end
 
-        --explorer.is_task_running = false  -- Reset the flag
+        explorer.is_task_running = false  -- Reset the flag
         console.print("Setting explorer task running flag to false.")
     end
 }

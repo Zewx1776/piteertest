@@ -78,8 +78,8 @@ local explorer = {
 local explored_areas = {}
 local target_position = nil
 local grid_size = 1.5            -- Size of grid cells in meters
-local exploration_radius = 10   -- Radius in which areas are considered explored
-local explored_buffer = 2      -- Buffer around explored areas in meters
+local exploration_radius = 7   -- Radius in which areas are considered explored
+local explored_buffer = 0      -- Buffer around explored areas in meters
 local max_target_distance = 120 -- Maximum distance for a new target
 local target_distance_states = {120, 40, 20, 5}
 local target_distance_index = 1
@@ -88,7 +88,7 @@ local stuck_threshold = 4      -- Seconds before the character is considered "st
 local last_position = nil
 local last_move_time = 0
 local last_explored_targets = {}
-local max_last_targets = 5
+local max_last_targets = 50
 
 -- A* pathfinding variables
 local current_path = {}
@@ -98,7 +98,7 @@ local path_index = 1
 local exploration_mode = "unexplored" -- "unexplored" oder "explored"
 
 -- Richtung für den "explored" Modus
-local exploration_direction = { x = 1, y = 0 } -- Initiale Richtung (kann angepasst werden)
+local exploration_direction = { x = 10, y = 0 } -- Initiale Richtung (kann angepasst werden)
 
 -- Neue Variable für die letzte Bewegungsrichtung
 local last_movement_direction = nil
