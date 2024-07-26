@@ -165,10 +165,10 @@ end
 
 local function check_walkable_area()
     --console.print("Checking walkable area.")
-    if os.time() % 5 ~= 0 then return end  -- Only run every 5 seconds
+    if os.time() % 1 ~= 0 then return end  -- Only run every 5 seconds
 
     local player_pos = get_player_position()
-    local check_radius = 10 -- Überprüfungsradius in Metern
+    local check_radius = 15 -- Überprüfungsradius in Metern
 
     mark_area_as_explored(player_pos, exploration_radius)
 

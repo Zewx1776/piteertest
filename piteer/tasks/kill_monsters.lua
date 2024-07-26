@@ -25,7 +25,7 @@ local task = {
             return false
         end
 
-        if stuck_position and utils.distance_to(stuck_position) < 10 then
+        if stuck_position and utils.distance_to(stuck_position) < 15 then
             -- Player is still within 10 units of the stuck position, do not resume
             return false
         else
