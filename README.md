@@ -1,3 +1,9 @@
+Beta Version 0.15
+-Added path smooting slider
+-Added option to loot or do nothing (use neers autolooter if you disable loot) 
+-Added navigation to start location for boss room 
+
+
 Beta Version 0.14
 -fixed stuck while kill monsters active
 -changed grid size to 1.5 (again) should improve performance at the cost of a few more stucks, but should get unstuck. 
