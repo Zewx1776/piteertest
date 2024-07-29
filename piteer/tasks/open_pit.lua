@@ -3,6 +3,7 @@ local enums      = require "data.enums"
 local navigation = require "core.navigation"
 local settings   = require "core.settings"
 local tracker    = require "core.tracker"
+local explorer   = require "core.explorer"
 
 local last_open  = 0
 
@@ -83,6 +84,7 @@ local task       = {
 
                 utility.open_pit_portal(actual_address)
                 last_open = get_time_since_inject()
+                explorer.is_task_running = false
             end
         else
             console.print("Obelisk not found. Pathfinding to obelisk position.")

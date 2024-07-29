@@ -9,7 +9,9 @@ local enums = {
         pit_portal = "EGD_MSWK_World_Portal_01"
     },
     misc = {
-        obelisk = "TWN_Kehj_IronWolves_PitKey_Crafter"
+        obelisk = "TWN_Kehj_IronWolves_PitKey_Crafter",
+        start_location_0 = "start_location_0",
+        start_location = "Start_Location_0"
     },
     positions = {
         obelisk_position = vec3:new(-1657.22, -611.48, 36.97)

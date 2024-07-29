@@ -1,5 +1,5 @@
-
 local settings = require "core.settings"
+local explorer = require "core.explorer"
 local task_manager = {}
 local tasks = {}
 local current_task = nil
@@ -66,13 +66,20 @@ function task_manager.execute_tasks()
 
     last_call_time = current_core_time
 
+    local is_exit_or_finish_active = false
     for _, task in ipairs(tasks) do
         if task.shouldExecute() then
             current_task = task
+            if task.name == "Exit Pit" or task.name == "Finish Pit" then
+                is_exit_or_finish_active = true
+            end
             task.Execute()
             break -- Execute only one task per pulse
         end
     end
+
+    -- Set the flag in the explorer module
+    explorer.is_task_running = is_exit_or_finish_active
 
     if not current_task then
         current_task = { name = "Idle" } -- Default state when no task is active
@@ -82,6 +89,7 @@ end
 function task_manager.get_current_task()
     return current_task or { name = "Idle" }
 end
+
 local task_files = { "kill_monsters", "enter_portal", "explore_pit", "open_pit", "finish_pit", "exit_pit" }
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)

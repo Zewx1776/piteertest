@@ -27,23 +27,25 @@ gui.elements = {
     elite_only_toggle = create_checkbox("elite_only"),
     pit_level = input_text:new(get_hash("piteer_pit_level_unique_id")),
     pit_level_slider = slider_int:new(1, 190, 1, 1984),
+    loot_toggle = create_checkbox("loot_toggle"),
     loot_modes = combo_box:new(0, get_hash("piteer_loot_modes")),
+    path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
 }
 
 function gui.render()
     if not gui.elements.main_tree:push("Piteer") then return end
 
     gui.elements.main_toggle:render("Enable", "Enable the bot")
-    if gui.elements.main_toggle:get() then
-        if gui.elements.settings_tree:push("Settings") then
-            gui.elements.melee_logic:render("Melee", "Do we need to move into Melee?")
-            gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?")
-            gui.elements.pit_level_slider:render("Pit Level", "Which Pit level do you want to enter?")
-            --gui.elements.pit_level:render("Level", "Which level do you want to enter?", false, "", "")
-
-            gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
-            gui.elements.settings_tree:pop()
-        end
+    
+    if gui.elements.settings_tree:push("Settings") then
+        gui.elements.melee_logic:render("Melee", "Do we need to move into Melee?")
+        gui.elements.elite_only_toggle:render("Elite Only", "Do we only want to seek out elites in the Pit?")
+        gui.elements.pit_level_slider:render("Pit Level", "Which Pit level do you want to enter?")
+        --gui.elements.pit_level:render("Level", "Which level do you want to enter?", false, "", "")
+        gui.elements.loot_toggle:render("Enable Looting", "Toggle looting on/off")        
+        gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
+        gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
+        gui.elements.settings_tree:pop()
     end
 
     gui.elements.main_tree:pop()

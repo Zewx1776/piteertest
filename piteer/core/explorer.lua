@@ -111,6 +111,24 @@ function explorer:clear_path_and_target()
     path_index = 1
 end
 
+--ai fix for boss room
+function explorer:set_start_location_target()
+    if self.is_task_running then
+        console.print("Task is running, skipping set_start_location_target")
+        return false
+    end
+
+    local start_location = utils.get_start_location_0()
+    if start_location then
+        console.print("Setting target to start location: " .. start_location:get_skin_name())
+        self:set_custom_target(start_location)
+        return true
+    else
+        --console.print("No start location found")
+        return false
+    end
+end
+
 --ai fix for stairs
 local function set_height_of_valid_position(point)
     --console.print("Setting height of valid position.")
@@ -349,7 +367,7 @@ local function find_explored_direction_target()
 
         if utility.is_point_walkeable(target_point) and is_point_in_explored_area(target_point) then
             local distance = calculate_distance(player_pos, target_point)
-            if distance > best_distance and not is_in_last_targets(target_point) then
+            if distance < best_distance and not is_in_last_targets(target_point) then
                 best_target = target_point
                 best_distance = distance
             end
@@ -500,8 +518,11 @@ local function reconstruct_path(came_from, current)
         local magnitude2 = math.sqrt(dir2.x^2 + dir2.y^2)
         local angle = math.acos(dot_product / (magnitude1 * magnitude2))
 
-        -- Keep points if the angle is greater than a threshold (e.g., 15 degrees)
-        if angle > math.rad(40) then
+        -- Use the angle from settings, converting degrees to radians
+        local angle_threshold = math.rad(settings.path_angle)
+
+        -- Keep points if the angle is greater than the threshold from settings
+        if angle > angle_threshold then
             table.insert(filtered_path, curr)
         end
     end
@@ -652,7 +673,7 @@ end
 explorer.check_if_stuck = check_if_stuck
 
 function explorer:set_custom_target(target)
-    --console.print("Setting custom target.")
+    console.print("Setting custom target.")
     target_position = target
 end
 
@@ -668,6 +689,10 @@ on_update(function()
 
     if not settings.enabled then
         return
+    end
+
+    if explorer.is_task_running then
+         return -- Don't run explorer logic if a task is running
     end
 
     local world = world.get_current_world()
@@ -715,6 +740,12 @@ on_update(function()
 
     if current_core_time - last_call_time > 0.15 then
         explorer:move_to_target()
+    end
+
+    if explorer:set_start_location_target() then
+        explorer:move_to_target()
+    else
+        -- Handle the case where no start location was found
     end
 
 end)
