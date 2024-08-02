@@ -1,3 +1,11 @@
+Beta Version 1.0
+- added town salvage in cinnegar
+- added town repair in cinnegar
+- added town sell in cinnegar
+- tweaked finish pit and exit pit to reduce chances of missing loot (neers autolooter is still highly recomended) 
+
+
+
 Beta Version 0.15
 -Added path smooting slider
 -Added option to loot or do nothing (use neers autolooter if you disable loot) 
