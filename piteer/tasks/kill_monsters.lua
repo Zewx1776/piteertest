@@ -17,6 +17,7 @@ local task = {
         return close_enemy ~= nil
     end,
     Execute = function()
+        explorer.current_task = "Kill Monsters"
         local player_pos = get_player_position()
 
         if explorer.check_if_stuck() then
@@ -56,6 +57,7 @@ local task = {
                 -- do nothing for now due to being ranged
             end
         end
+        explorer.current_task = nil
     end
 }
 

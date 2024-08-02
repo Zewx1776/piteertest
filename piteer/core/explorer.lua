@@ -113,8 +113,8 @@ end
 
 --ai fix for boss room
 function explorer:set_start_location_target()
-    if self.is_task_running then
-        console.print("Task is running, skipping set_start_location_target")
+    if self.is_task_running or self.current_task == "Kill Monsters" then
+        console.print("Task is running or Kill Monsters task is active, skipping set_start_location_target")
         return false
     end
 
@@ -124,7 +124,6 @@ function explorer:set_start_location_target()
         self:set_custom_target(start_location)
         return true
     else
-        --console.print("No start location found")
         return false
     end
 end

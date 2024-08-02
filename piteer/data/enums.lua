@@ -11,10 +11,14 @@ local enums = {
     misc = {
         obelisk = "TWN_Kehj_IronWolves_PitKey_Crafter",
         start_location_0 = "start_location_0",
-        start_location = "Start_Location_0"
+        start_location = "Start_Location_0",
+        blacksmith = "TWN_Scos_Cerrigar_Crafter_Blacksmith",
+        jeweler = "TWN_Scos_Cerrigar_Vendor_Weapons"
     },
     positions = {
-        obelisk_position = vec3:new(-1657.22, -611.48, 36.97)
+        obelisk_position = vec3:new(-1657.22, -611.48, 36.97) ,
+        blacksmith_position = vec3:new(-1685.5394287109, -596.86566162109, 37.6484375) ,
+        jeweler_position = vec3:new(-1658.699219, -620.020508, 37.888672) 
     }
 }
 

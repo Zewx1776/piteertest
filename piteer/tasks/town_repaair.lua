@@ -5,11 +5,10 @@ local settings = require "core.settings"
 local gui = require "gui"
 
 local task = {
-    name = "Town Salvage",
+    name = "Town Repair",
     shouldExecute = function()
         return utils.player_in_zone("Scos_Cerrigar") 
-        and get_local_player():get_item_count() >= 25
-        and settings.loot_modes == gui.loot_modes_enum.SALVAGE  -- Correct reference to the current loot mode setting
+            and auto_play.get_objective() == objective.repair
     end,
     Execute = function(self)
         local blacksmith = utils.get_blacksmith()
@@ -21,8 +20,7 @@ local task = {
             -- Check if the player is close enough to interact with the blacksmith
             if utils.distance_to(blacksmith) < 2 then
                 console.print("Player is close enough to the blacksmith. Interacting with the blacksmith.")
-                interact_vendor(blacksmith)
-                loot_manager.salvage_all_items()
+                loot_manager.interact_with_vendor_and_repair_all(blacksmith)
             end
 
             return true

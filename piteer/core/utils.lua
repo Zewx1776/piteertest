@@ -122,5 +122,32 @@ function utils.get_start_location_0()
     return nil
 end
 
+function utils.get_blacksmith()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == enums.misc.blacksmith then
+            console.print("blacksmith location found: " .. name)
+            return actor
+        end
+    end
+    --console.print("No start location found")
+    return nil
+end
+
+function utils.get_jeweler()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == enums.misc.jeweler then
+            local position = actor:get_position()
+            console.print(string.format("Jeweler location found: %s at position: (x: %f, y: %f, z: %f)", name, position:x(), position:y(), position:z()))
+            return actor
+        end
+    end
+    --console.print("No start location found")
+    return nil
+end
+
 
 return utils

@@ -46,7 +46,7 @@ local task = {
             end
         end
 
-        if get_time_since_inject() - start_time > 15 then
+        if get_time_since_inject() - start_time > 25 then
             start_time = 0  -- Reset the start time for the next execution
             loot_processed = true  -- Set the flag indicating loot has been processed
             explorer.is_task_running = false  -- Reset the flag
