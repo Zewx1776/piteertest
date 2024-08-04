@@ -16,10 +16,11 @@ local enums = {
         jeweler = "TWN_Scos_Cerrigar_Vendor_Weapons"
     },
     positions = {
-        obelisk_position = vec3:new(-1657.22, -611.48, 36.97) ,
+        obelisk_position = vec3:new(-1659.1735839844, -613.06573486328, 37.2822265625)  ,
         blacksmith_position = vec3:new(-1685.5394287109, -596.86566162109, 37.6484375) ,
         jeweler_position = vec3:new(-1658.699219, -620.020508, 37.888672) 
     }
 }
 
 return enums
+

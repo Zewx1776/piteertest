@@ -71,6 +71,7 @@ end
 local utils = require "core.utils"
 local enums = require "data.enums"
 local settings = require "core.settings"
+local tracker = require "core.tracker"
 local explorer = {
     enabled = false,
     is_task_running = false, --added to prevent boss dead pathing 
@@ -78,17 +79,39 @@ local explorer = {
 local explored_areas = {}
 local target_position = nil
 local grid_size = 1.5            -- Size of grid cells in meters
-local exploration_radius = 7   -- Radius in which areas are considered explored
-local explored_buffer = 0      -- Buffer around explored areas in meters
+local exploration_radius = 10   -- Radius in which areas are considered explored
+local explored_buffer = 2      -- Buffer around explored areas in meters
 local max_target_distance = 120 -- Maximum distance for a new target
 local target_distance_states = {120, 40, 20, 5}
 local target_distance_index = 1
-local unstuck_target_distance = 5 -- Maximum distance for an unstuck target
+local unstuck_target_distance = 15 -- Maximum distance for an unstuck target
 local stuck_threshold = 4      -- Seconds before the character is considered "stuck"
 local last_position = nil
 local last_move_time = 0
 local last_explored_targets = {}
 local max_last_targets = 50
+
+
+-- Function to check and print pit start time and time spent in pit
+local function check_pit_time()
+    --console.print("Checking pit start time...")  -- Add this line for debugging
+    if tracker.pit_start_time > 0 then
+        local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
+    else
+        --console.print("Pit start time is not set or is zero.")  -- Add this line for debugging
+    end
+end
+local function check_and_reset_dungeons()
+    --console.print("Executing check_and_reset_dungeons") -- Debug print
+    if tracker.pit_start_time > 0 then
+        local time_spent_in_pit = get_time_since_inject() - tracker.pit_start_time
+        local reset_time_threshold = settings.reset_time
+        if time_spent_in_pit > reset_time_threshold then
+            console.print("Time spent in pit is greater than " .. reset_time_threshold .. " seconds. Resetting all dungeons.")
+            reset_all_dungeons()
+        end
+    end
+end
 
 -- A* pathfinding variables
 local current_path = {}
@@ -154,8 +177,9 @@ local explored_area_bounds = {
     max_x = -math.huge,
     min_y = math.huge,
     max_y = -math.huge,
+    min_z = math.huge,
+    max_z = math.huge
 }
-
 local function update_explored_area_bounds(point, radius)
     --console.print("Updating explored area bounds.")
     explored_area_bounds.min_x = math.min(explored_area_bounds.min_x, point:x() - radius)
@@ -233,7 +257,7 @@ end
 
 local function is_near_wall(point)
     --console.print("Checking if point is near wall.")
-    local wall_check_distance = 1 -- Abstand zur Überprüfung von Wänden
+    local wall_check_distance = 2 -- Abstand zur Überprüfung von Wänden
     local directions = {
         { x = 1, y = 0 }, { x = -1, y = 0 }, { x = 0, y = 1 }, { x = 0, y = -1 },
         { x = 1, y = 1 }, { x = 1, y = -1 }, { x = -1, y = 1 }, { x = -1, y = -1 }
@@ -258,8 +282,8 @@ local function find_central_unexplored_target()
     local player_pos = get_player_position()
     local check_radius = max_target_distance
     local unexplored_points = {}
-    local min_x, max_x, min_y, max_y = math.huge, -math.huge, math.huge, -math.huge
 
+    -- Collect unexplored points
     for x = -check_radius, check_radius, grid_size do
         for y = -check_radius, check_radius, grid_size do
             local point = vec3:new(
@@ -272,10 +296,6 @@ local function find_central_unexplored_target()
 
             if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) then
                 table.insert(unexplored_points, point)
-                min_x = math.min(min_x, point:x())
-                max_x = math.max(max_x, point:x())
-                min_y = math.min(min_y, point:y())
-                max_y = math.max(max_y, point:y())
             end
         end
     end
@@ -284,16 +304,48 @@ local function find_central_unexplored_target()
         return nil
     end
 
-    local center_x = (min_x + max_x) / 2
-    local center_y = (min_y + max_y) / 2
+    -- Use a grid-based clustering approach
+    local grid = {}
+    for _, point in ipairs(unexplored_points) do
+        local grid_key = get_grid_key(point)
+        if not grid[grid_key] then
+            grid[grid_key] = { points = {}, count = 0 }
+        end
+        table.insert(grid[grid_key].points, point)
+        grid[grid_key].count = grid[grid_key].count + 1
+    end
+
+    -- Find the grid cell with the most unexplored points
+    local largest_cluster = nil
+    local max_count = 0
+    for _, cell in pairs(grid) do
+        if cell.count > max_count then
+            largest_cluster = cell.points
+            max_count = cell.count
+        end
+    end
+
+    if not largest_cluster then
+        return nil
+    end
+
+    -- Calculate the center of the largest cluster
+    local sum_x, sum_y = 0, 0
+    for _, point in ipairs(largest_cluster) do
+        sum_x = sum_x + point:x()
+        sum_y = sum_y + point:y()
+    end
+    local center_x = sum_x / #largest_cluster
+    local center_y = sum_y / #largest_cluster
     local center = vec3:new(center_x, center_y, player_pos:z())
     center = set_height_of_valid_position(center)
 
-    table.sort(unexplored_points, function(a, b)
+    -- Sort points in the largest cluster by distance to the center
+    table.sort(largest_cluster, function(a, b)
         return calculate_distance(a, center) < calculate_distance(b, center)
     end)
 
-    return unexplored_points[1]
+    return largest_cluster[1]
 end
 
 local function find_random_explored_target()
@@ -347,18 +399,42 @@ local function add_to_last_targets(point)
     end
 end
 
+local function find_nearby_unexplored_point(center, radius)
+    local check_radius = max_target_distance
+    local player_pos = get_player_position()
+
+    for x = -check_radius, check_radius, grid_size do
+        for y = -check_radius, check_radius, grid_size do
+            local point = vec3:new(
+                center:x() + x,
+                center:y() + y,
+                center:z()
+            )
+
+            point = set_height_of_valid_position(point)
+
+            if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) then
+                return point
+            end
+        end
+    end
+
+    return nil
+end
+
 local function find_explored_direction_target()
     console.print("Finding explored direction target.")
     local player_pos = get_player_position()
-    local max_attempts = 200
+    local max_attempts = 500
     local attempts = 0
     local best_target = nil
-    local best_distance = 0
+    local best_distance = math.huge -- Initialize to a large value to find the closest point
 
     while attempts < max_attempts do
+        attempts = attempts + 1
         local direction_vector = vec3:new(
-            exploration_direction.x * max_target_distance * 0.5 ,
-            exploration_direction.y * max_target_distance * 0.5,
+            exploration_direction.x * max_target_distance * 0.4,
+            exploration_direction.y * max_target_distance * 0.4,
             0
         )
         local target_point = player_pos + direction_vector
@@ -369,25 +445,36 @@ local function find_explored_direction_target()
             if distance < best_distance and not is_in_last_targets(target_point) then
                 best_target = target_point
                 best_distance = distance
+
+                -- Check for nearby unexplored points
+                local nearby_unexplored_point = find_nearby_unexplored_point(target_point, exploration_radius)
+                if nearby_unexplored_point then
+                    console.print("Nearby unexplored point found. Switching to unexplored mode.")
+                    exploration_mode = "unexplored"
+                    return nearby_unexplored_point
+                end
             end
+        else
+            --console.print("Attempt " .. attempts .. ": Target point is not walkable or not in explored area.")
         end
 
-        -- Ändere die Richtung leicht
-        local angle = math.atan2(exploration_direction.y, exploration_direction.x) + math.random() * math.pi / 2 -
-            math.pi / 4
+        -- Change the direction slightly for the next attempt
+        local angle = math.atan2(exploration_direction.y, exploration_direction.x) + math.random() * math.pi / 4 - math.pi / 8
         exploration_direction.x = math.cos(angle)
         exploration_direction.y = math.sin(angle)
-        attempts = attempts + 1
     end
 
     if best_target then
         add_to_last_targets(best_target)
+        console.print("Found best target after " .. attempts .. " attempts.")
         return best_target
+    else
+        console.print("Could not find a valid explored target after " .. max_attempts .. " attempts.")
+        return nil
     end
-
-    console.print("Could not find a valid explored target after " .. max_attempts .. " attempts.")
-    return nil
 end
+
+
 
 local function find_unstuck_target()
     console.print("Finding unstuck target.")
@@ -461,8 +548,8 @@ local function get_neighbors(point)
     --console.print("Getting neighbors of point.")
     local neighbors = {}
     local directions = {
-        { x = 1.2, y = 0 }, { x = -1.2, y = 0 }, { x = 0, y = 1.2 }, { x = 0, y = -1.2 },
-        { x = 1.2, y = 1.2 }, { x = 1.2, y = -1.2 }, { x = -1.2, y = 1.2 }, { x = -1.2, y = -1.2 }
+        { x = 1, y = 0 }, { x = -1, y = 0 }, { x = 0, y = 1 }, { x = 0, y = -1 },
+        { x = 1, y = 1 }, { x = 1, y = -1 }, { x = -1, y = 1 }, { x = -1, y = -1 }
     }
     for _, dir in ipairs(directions) do
         local neighbor = vec3:new(
@@ -589,9 +676,8 @@ end
 
 local last_a_star_call = 0.0
 local function move_to_target()
-    --console.print("Moving to target.")
     if explorer.is_task_running then
-    return  -- Do not set a path if a task is running
+        return  -- Do not set a path if a task is running
     end
 
     if target_position then
@@ -637,12 +723,25 @@ local function move_to_target()
             current_path = {}
             path_index = 1
 
+            -- Check for nearby unexplored points when in explored mode
             if exploration_mode == "explored" then
-                local unexplored_target = find_central_unexplored_target()
-                if unexplored_target then
+                local nearby_unexplored_point = find_nearby_unexplored_point(player_pos, exploration_radius)
+                if nearby_unexplored_point then
                     exploration_mode = "unexplored"
-                    console.print("Found new unexplored area. Switching back to unexplored mode.")
+                    target_position = nearby_unexplored_point
+                    console.print("Found nearby unexplored area. Switching back to unexplored mode.")
                     last_explored_targets = {}
+                    current_path = nil
+                    path_index = 1
+                else
+                    -- If no unexplored points are found, continue with explored mode logic
+                    local unexplored_target = find_central_unexplored_target()
+                    if unexplored_target then
+                        exploration_mode = "unexplored"
+                        target_position = unexplored_target
+                        console.print("Found new unexplored area. Switching back to unexplored mode.")
+                        last_explored_targets = {}
+                    end
                 end
             end
         end
@@ -650,6 +749,7 @@ local function move_to_target()
         target_position = find_target(false)
     end
 end
+
 
 local function check_if_stuck()
     --console.print("Checking if character is stuck.")
@@ -746,6 +846,9 @@ on_update(function()
     else
         -- Handle the case where no start location was found
     end
+
+    check_pit_time()
+    check_and_reset_dungeons() 
 
 end)
 
