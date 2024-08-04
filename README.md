@@ -1,3 +1,14 @@
+**Version 2.0**
+  -added max pit time slider 
+  
+  - exits pit when time in pit reaches reset time
+
+  - improved find central unexplored target (main target setting function, now utilizes dbscan algo to cluster unexplored points for navigating to clusters instead of finding the center of all unexplored points
+  - improved explored mode target setting (should prioritize setting a target <90 degrees from last target to prevent bouncing between two points)
+  - improved move to target for explored mode to prioritize moving to unexplored points when one is found within target distance range) 
+
+
+
 Beta Version 1.0
 - added town salvage in cinnegar
 - added town repair in cinnegar
