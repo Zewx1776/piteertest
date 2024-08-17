@@ -23,8 +23,8 @@ local task = {
             tracker.finished_time = get_time_since_inject()
         end
 
-        if get_time_since_inject() > tracker.finished_time + 7 then
-            if get_time_since_inject() - last_reset > 10 then
+        if get_time_since_inject() > tracker.finished_time + 10 then
+            if get_time_since_inject() - last_reset > 20 then
                 last_reset = get_time_since_inject()
                 reset_all_dungeons()
                 console.print("Resetting all dungeons at time: " .. get_time_since_inject())

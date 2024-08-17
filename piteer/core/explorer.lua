@@ -75,6 +75,7 @@ local tracker = require "core.tracker"
 local explorer = {
     enabled = false,
     is_task_running = false, --added to prevent boss dead pathing 
+    start_location_reached = false  -- New flag
 }
 local explored_areas = {}
 local target_position = nil
@@ -134,10 +135,34 @@ function explorer:clear_path_and_target()
     path_index = 1
 end
 
+local function calculate_distance(point1, point2)
+    --console.print("Calculating distance between points.")
+    if not point2.x and point2 then
+        return point1:dist_to_ignore_z(point2:get_position())
+    end
+    return point1:dist_to_ignore_z(point2)
+end
+
+--ai fix for start location spamming 
+function explorer:check_start_location_reached()
+    if not self.start_location_reached then
+        local start_location = utils.get_start_location_0()
+        if start_location then
+            local player_pos = get_player_position()
+            local start_pos = start_location:get_position()
+            if calculate_distance(player_pos, start_pos) < 2 then  -- Adjust this distance as needed
+                self.start_location_reached = true
+                console.print("Start location reached")
+            end
+        end
+    end
+end
+
+
 --ai fix for boss room
 function explorer:set_start_location_target()
-    if self.is_task_running or self.current_task == "Kill Monsters" then
-        console.print("Task is running or Kill Monsters task is active, skipping set_start_location_target")
+    if self.is_task_running or self.current_task == "Kill Monsters" or self.start_location_reached then
+        console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
         return false
     end
 
@@ -150,6 +175,7 @@ function explorer:set_start_location_target()
         return false
     end
 end
+
 
 --ai fix for stairs
 local function set_height_of_valid_position(point)
@@ -164,13 +190,6 @@ local function get_grid_key(point)
         math.floor(point:z() / grid_size)
 end
 
-local function calculate_distance(point1, point2)
-    --console.print("Calculating distance between points.")
-    if not point2.x and point2 then
-        return point1:dist_to_ignore_z(point2:get_position())
-    end
-    return point1:dist_to_ignore_z(point2)
-end
 
 local explored_area_bounds = {
     min_x = math.huge,
@@ -784,8 +803,6 @@ end
 local last_call_time = 0.0
 local is_player_on_quest = false
 on_update(function()
-    --console.print("Running on_update.")
-
     if not settings.enabled then
         return
     end
@@ -802,12 +819,11 @@ on_update(function()
         end
     end
 
-    -- repeat this code on explorer.lua cba , i want to move fast
-    local auto_play_objective = auto_play.get_objective()
-    local should_sell = auto_play_objective == objective.sell
-    if should_sell then
-        return -- stop code here
-    end
+    --local auto_play_objective = auto_play.get_objective()
+    --local should_sell = auto_play_objective == objective.sell
+    --if should_sell then
+    --    return -- stop code here
+    --end
 
     local current_core_time = get_time_since_inject()
     if current_core_time - last_call_time > 0.45 then
@@ -830,26 +846,23 @@ on_update(function()
             local local_player = get_local_player()
             if local_player and local_player:is_dead() then
                 revive_at_checkpoint()
-            else
-                --console.print("local_player " .. tostring(local_player))  -- Fixed line
-                --console.print("local_player:is_dead() " .. tostring(local_player:is_dead()))
             end
         end
     end
 
     if current_core_time - last_call_time > 0.15 then
-        explorer:move_to_target()
-    end
+        explorer:check_start_location_reached()
 
-    if explorer:set_start_location_target() then
-        explorer:move_to_target()
-    else
-        -- Handle the case where no start location was found
+        if not explorer.start_location_reached and explorer:set_start_location_target() then
+            explorer:move_to_target()
+        else
+            -- Regular exploration logic
+            explorer:move_to_target()
+        end
     end
 
     check_pit_time()
     check_and_reset_dungeons() 
-
 end)
 
 on_render(function()
