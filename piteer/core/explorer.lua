@@ -197,7 +197,7 @@ local explored_area_bounds = {
     min_y = math.huge,
     max_y = -math.huge,
     min_z = math.huge,
-    max_z = math.huge
+    max_z = -math.huge
 }
 local function update_explored_area_bounds(point, radius)
     --console.print("Updating explored area bounds.")
@@ -695,8 +695,8 @@ end
 
 local last_a_star_call = 0.0
 local function move_to_target()
-    if explorer.is_task_running then
-        return  -- Do not set a path if a task is running
+    if tracker:is_boss_task_running() then
+        return  -- Do not set a path if the boss task is running
     end
 
     if target_position then
@@ -724,6 +724,10 @@ local function move_to_target()
 
         local next_point = current_path[path_index]
         if next_point and not next_point:is_zero() then
+            -- Attempt to use a movement spell (including evade) to the next point
+            explorer:movement_spell_to_target(next_point)
+            
+            -- Request move regardless of whether the movement spell was successful
             pathfinder.request_move(next_point)
         end
 
@@ -795,6 +799,33 @@ function explorer:set_custom_target(target)
     target_position = target
 end
 
+function explorer:movement_spell_to_target(target)
+    local local_player = get_local_player()
+    if not local_player then return end
+
+    local movement_spell_id = {
+        288106, -- Sorcerer teleport
+        358761, -- Rogue dash
+        355606, -- Rogue shadow step
+        337031  -- General Evade
+    }
+
+    -- Check if the dash spell is off cooldown and ready to cast
+    for _, spell_id in ipairs(movement_spell_id) do
+        if local_player:is_spell_ready(spell_id) then
+            -- Cast the dash spell towards the target's position
+            local success = cast_spell.position(spell_id, target, 3.0) -- A little delay or else rogue goes turbo in dashing
+            if success then
+                console.print("Successfully used movement spell to target.")
+            else
+                console.print("Failed to use movement spell.")
+            end
+        else
+            console.print("Movement spell on cooldown.")
+        end
+    end
+end
+
 -- Expose the move_to_target function
 function explorer:move_to_target()
     move_to_target()
@@ -807,8 +838,8 @@ on_update(function()
         return
     end
 
-    if explorer.is_task_running then
-         return -- Don't run explorer logic if a task is running
+    if tracker:is_boss_task_running() then
+        return -- Don't run explorer logic if the boss task is running
     end
 
     local world = world.get_current_world()
