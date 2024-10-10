@@ -2,20 +2,23 @@ local utils      = require "core.utils"
 local enums      = require "data.enums"
 local tracker    = require "core.tracker"
 local explorer   = require "core.explorer"
+local settings   = require "core.settings"  -- Add this line to import settings
 
 local last_reset = 0
 local task = {
     name = "Exit Pit",
     shouldExecute = function()
-        --console.print("Checking if the task 'Exit Pit' should be executed.")
-        return utils.player_on_quest(enums.quests.pit_started) and not utils.player_on_quest(enums.quests.pit_ongoing) --and
-               --not utils.loot_on_floor()
+        -- Add a check for the exit_pit_enabled setting
+        return settings.exit_pit_enabled and
+               utils.player_on_quest(enums.quests.pit_started) and 
+               not utils.player_on_quest(enums.quests.pit_ongoing)
     end,
     Execute = function()
         console.print("Executing the task: Exit Pit.")
         explorer.is_task_running = true  -- Set the flag
         console.print("Setting explorer task running flag to true.")
         explorer:clear_path_and_target()
+        tracker:set_boss_task_running(false)
         console.print("Clearing path and target in explorer.")
         
         if tracker.finished_time == 0 then

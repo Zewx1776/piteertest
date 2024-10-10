@@ -3,8 +3,8 @@ local enums = require "data.enums"
 local explorer = require "core.explorer"
 local tracker = require "core.tracker"
 
-local ROTATION_RADIUS = 6 -- Adjust this value to change the radius of the rotation points
-local ROTATION_POINTS = 7
+local ROTATION_RADIUS = 7 -- Adjust this value to change the radius of the rotation points
+local ROTATION_POINTS = 20
 local BAD_ACTORS = {
     "fxkit_damaging_persistentCylindrical_demonic_core_fxMesh",
     "demonic",  -- This will match any actor name containing "demonic"
@@ -101,6 +101,21 @@ local function use_movement_spell_to_target(target)
     return false
 end
 
+local function find_closest_adjacent_point(current_index, points)
+    local num_points = #points
+    local prev_index = ((current_index - 2) % num_points) + 1
+    local next_index = (current_index % num_points) + 1
+    
+    local prev_distance = utils.distance_to(points[prev_index])
+    local next_distance = utils.distance_to(points[next_index])
+    
+    if prev_distance < next_distance then
+        return prev_index
+    else
+        return next_index
+    end
+end
+
 local current_point_index = 1
 local movement_direction = 1
 
@@ -140,33 +155,33 @@ local task = {
         for _, bad_actor in ipairs(bad_actors) do
             local furthest_point = find_furthest_point(rotation_points, bad_actor:get_position())
             if furthest_point then
-                if not use_movement_spell_to_target(furthest_point) then
+                -- Commented out the use_movement_spell_to_target call
+                 if not use_movement_spell_to_target(furthest_point) then
                     pathfinder.request_move(furthest_point)
-                end
+                 end
                 return
             end
         end
 
         -- Normal rotation logic
-        if utils.distance_to(player_pos, current_point) < 1 then
-            local next_index = find_safe_point(rotation_points, current_point_index, movement_direction)
-            
-            if next_index then
-                current_point_index = next_index
-            else
-                -- If no safe point is found, reverse direction
-                movement_direction = -movement_direction
-                next_index = find_safe_point(rotation_points, current_point_index, movement_direction)
-                if next_index then
-                    current_point_index = next_index
-                else
-                    -- If still no safe point, stay at the current point
-                    console.print("No safe points found. Staying at current position.")
-                end
-            end
+        local closest_adjacent_index = find_closest_adjacent_point(current_point_index, rotation_points)
+        
+        if closest_adjacent_index ~= current_point_index then
+            console.print("Adjusting to adjacent point: " .. closest_adjacent_index)
+            current_point_index = closest_adjacent_index
         end
 
-        pathfinder.request_move(rotation_points[current_point_index])
+        local target_point = rotation_points[current_point_index]
+        local distance_to_target = utils.distance_to(target_point)
+        
+        if distance_to_target > 1.0 then
+            console.print("Moving to point " .. current_point_index .. " (distance: " .. string.format("%.2f", distance_to_target) .. ")")
+            console.print("Target point coordinates: x=" .. target_point:x() .. ", y=" .. target_point:y() .. ", z=" .. target_point:z())
+            pathfinder.request_move(target_point)
+        else
+            console.print("Reached point " .. current_point_index .. ", moving to next")
+            current_point_index = (current_point_index % #rotation_points) + 1
+        end
 
         --is_boss_task_active = false
         --tracker:set_boss_task_running(false)

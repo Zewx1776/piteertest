@@ -725,7 +725,7 @@ local function move_to_target()
         local next_point = current_path[path_index]
         if next_point and not next_point:is_zero() then
             -- Attempt to use a movement spell (including evade) to the next point
-            explorer:movement_spell_to_target(next_point)
+            --explorer:movement_spell_to_target(next_point)
             
             -- Request move regardless of whether the movement spell was successful
             pathfinder.request_move(next_point)
