@@ -2,6 +2,7 @@ local utils = require "core.utils"
 local enums = require "data.enums"
 local explorer = require "core.explorer"
 local settings = require "core.settings"
+local tracker = require "core.tracker"  -- Add this line to import the tracker module
 
 local start_time = 0
 local loot_processed = false  -- Add a flag to track loot processing
@@ -18,6 +19,8 @@ local task = {
         console.print("Executing the task: Finish Pit.")
         explorer.is_task_running = true  -- Set the flag
         explorer:clear_path_and_target()
+        
+        --tracker:set_boss_task_running(false)  -- Add this line to set boss task as not running
         
         if start_time == 0 then
             start_time = get_time_since_inject()
