@@ -56,7 +56,7 @@ local task = {
                 console.print("Interacting with obelisk.")
                 loot_manager.interact_with_object(obelisk)
 
-                if utils.distance_to(obelisk) < 2 and get_time_since_inject() - last_open > 2 then
+                if utils.distance_to(obelisk) < 3 and get_time_since_inject() - last_open > 2 then
                     console.print("Opening pit portal.")
                     local pit_level = settings.pit_level
                     local actual_address = 0x1C34EB
