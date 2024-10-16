@@ -92,11 +92,8 @@ function utils.get_pit_portal()
     local actors = actors_manager:get_all_actors()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
-        local distance = utils.distance_to(actor)
-        if distance < 1000 then
-            if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
-                return actor
-            end
+        if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
+            return actor
         end
     end
 end

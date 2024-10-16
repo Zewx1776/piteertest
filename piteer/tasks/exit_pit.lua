@@ -18,7 +18,7 @@ local task = {
         explorer.is_task_running = true  -- Set the flag
         console.print("Setting explorer task running flag to true.")
         explorer:clear_path_and_target()
-        tracker:set_boss_task_running(false)
+        tracker:set_boss_task_running(true)
         console.print("Clearing path and target in explorer.")
         
         if tracker.finished_time == 0 then

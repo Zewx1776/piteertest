@@ -20,7 +20,7 @@ local task = {
         explorer.is_task_running = true  -- Set the flag
         explorer:clear_path_and_target()
         
-        --tracker:set_boss_task_running(false)  -- Add this line to set boss task as not running
+        tracker:set_boss_task_running(true)  -- Add this line to set boss task as not running
         
         if start_time == 0 then
             start_time = get_time_since_inject()

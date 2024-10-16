@@ -82,8 +82,8 @@ local target_position = nil
 local grid_size = 1.5            -- Size of grid cells in meters
 local exploration_radius = 10   -- Radius in which areas are considered explored
 local explored_buffer = 2      -- Buffer around explored areas in meters
-local max_target_distance = 120 -- Maximum distance for a new target
-local target_distance_states = {120, 40, 20, 5}
+local max_target_distance = 200 -- Maximum distance for a new target
+local target_distance_states = {200, 40, 20, 5}
 local target_distance_index = 1
 local unstuck_target_distance = 15 -- Maximum distance for an unstuck target
 local stuck_threshold = 4      -- Seconds before the character is considered "stuck"
@@ -694,6 +694,9 @@ local function a_star(start, goal)
 end
 
 local last_a_star_call = 0.0
+local path_recalculation_interval = 0.50 -- Recalculate path every 2 seconds
+local last_path_recalculation = 0.0
+
 local function move_to_target()
     if tracker:is_boss_task_running() then
         return  -- Do not set a path if the boss task is running
@@ -720,6 +723,14 @@ local function move_to_target()
                 target_position = find_target(false)
                 return
             end
+        end
+
+        local current_time = get_time_since_inject()
+        if current_time - last_path_recalculation > path_recalculation_interval then
+            local player_pos = get_player_position()
+            current_path = a_star(player_pos, target_position)
+            path_index = 1
+            last_path_recalculation = current_time
         end
 
         local next_point = current_path[path_index]
