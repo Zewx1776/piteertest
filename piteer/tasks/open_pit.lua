@@ -40,6 +40,7 @@ local task = {
     end,
     Execute = function()
         console.print("Executing the task: Open Pit.")
+        tracker.pit_start_time = get_time_since_inject()
         if tracker.finished_time ~= 0 then
             console.print("Resetting tracker finished time to 0.")
             tracker.finished_time = 0
