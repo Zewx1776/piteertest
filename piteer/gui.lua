@@ -32,6 +32,7 @@ gui.elements = {
     path_angle_slider = slider_int:new(0, 360, 10, get_hash("path_angle_slider")), -- 10 is a default value
     reset_time_slider = slider_int:new(60, 900, 60, get_hash("reset_time_slider")), -- New slider for reset time in seconds
     exit_pit_toggle = create_checkbox("exit_pit_toggle"),
+    explorer_grid_size_slider = slider_int:new(10, 20, 15, get_hash("explorer_grid_size_slider")), -- New slider for explorer grid size
 }
 
 function gui.render()
@@ -48,7 +49,8 @@ function gui.render()
         gui.elements.loot_modes:render("Loot Modes", gui.loot_modes_options, "Nothing and Stash will get you stuck for now")
         gui.elements.path_angle_slider:render("Path Angle", "Adjust the angle for path filtering (0-360 degrees)")
         gui.elements.reset_time_slider:render("Reset Time (seconds)", "Set the time in seconds for resetting all dungeons")
-        gui.elements.exit_pit_toggle:render("Enable Exit Pit", "Toggle Exit Pit task on/off") -- Render the new slider
+        gui.elements.exit_pit_toggle:render("Enable Exit Pit", "Toggle Exit Pit task on/off")
+        gui.elements.explorer_grid_size_slider:render("Explorer Grid Size", "Adjust the grid size for exploration (1.0-2.0)")
         gui.elements.settings_tree:pop()
     end
 

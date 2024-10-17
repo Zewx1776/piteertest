@@ -79,11 +79,11 @@ local explorer = {
 }
 local explored_areas = {}
 local target_position = nil
-local grid_size = 1.5            -- Size of grid cells in meters
+local grid_size = settings.explorer_grid_size / 10  -- Updated grid_size calculation
 local exploration_radius = 10   -- Radius in which areas are considered explored
 local explored_buffer = 2      -- Buffer around explored areas in meters
-local max_target_distance = 200 -- Maximum distance for a new target
-local target_distance_states = {200, 40, 20, 5}
+local max_target_distance = 120 -- Maximum distance for a new target
+local target_distance_states = {120, 40, 20, 5}
 local target_distance_index = 1
 local unstuck_target_distance = 15 -- Maximum distance for an unstuck target
 local stuck_threshold = 4      -- Seconds before the character is considered "stuck"
@@ -93,7 +93,7 @@ local last_explored_targets = {}
 local max_last_targets = 50
 
 
--- Function to check and print pit start time and time spent in pit
+-- Function to check and print pit start time and time spent in pitre
 local function check_pit_time()
     --console.print("Checking pit start time...")  -- Add this line for debugging
     if tracker.pit_start_time > 0 then
@@ -162,7 +162,7 @@ end
 --ai fix for boss room
 function explorer:set_start_location_target()
     if self.is_task_running or self.current_task == "Kill Monsters" or tracker.start_location_reached then
-        console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
+        --console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
         return false
     end
 
@@ -694,7 +694,7 @@ local function a_star(start, goal)
 end
 
 local last_a_star_call = 0.0
-local path_recalculation_interval = 0.50 -- Recalculate path every 2 seconds
+local path_recalculation_interval = 1.0 -- Recalculate path every 2 seconds
 local last_path_recalculation = 0.0
 
 local function move_to_target()
@@ -862,7 +862,7 @@ on_update(function()
     end
 
     local current_core_time = get_time_since_inject()
-    if current_core_time - last_call_time > 0.45 then
+    if current_core_time - last_call_time > 0.55 then
         last_call_time = current_core_time
         is_player_on_quest = utils.player_on_quest(enums.quests.pit_ongoing) and settings.enabled
         if not is_player_on_quest then
