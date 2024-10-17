@@ -23,7 +23,8 @@ local tracker = {
     locked_door_found = false,
     boss_killed = false,
     teleported_from_town = false,
-    start_time = 0
+    start_time = 0,
+    start_location_reached = false
 }
 
 -- Add these functions to manage the flag

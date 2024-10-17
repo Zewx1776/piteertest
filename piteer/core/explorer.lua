@@ -145,13 +145,13 @@ end
 
 --ai fix for start location spamming 
 function explorer:check_start_location_reached()
-    if not self.start_location_reached then
+    if not tracker.start_location_reached then
         local start_location = utils.get_start_location_0()
         if start_location then
             local player_pos = get_player_position()
             local start_pos = start_location:get_position()
             if calculate_distance(player_pos, start_pos) < 2 then  -- Adjust this distance as needed
-                self.start_location_reached = true
+                tracker.start_location_reached = true
                 console.print("Start location reached")
             end
         end
@@ -161,7 +161,7 @@ end
 
 --ai fix for boss room
 function explorer:set_start_location_target()
-    if self.is_task_running or self.current_task == "Kill Monsters" or self.start_location_reached then
+    if self.is_task_running or self.current_task == "Kill Monsters" or tracker.start_location_reached then
         console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
         return false
     end
@@ -860,12 +860,6 @@ on_update(function()
             return
         end
     end
-
-    --local auto_play_objective = auto_play.get_objective()
-    --local should_sell = auto_play_objective == objective.sell
-    --if should_sell then
-    --    return -- stop code here
-    --end
 
     local current_core_time = get_time_since_inject()
     if current_core_time - last_call_time > 0.45 then
