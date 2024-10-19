@@ -15,7 +15,8 @@ local enums = {
         traversal_controller = "Traversal_Controller",
         blacksmith = "TWN_Scos_Cerrigar_Crafter_Blacksmith",
         portal = "TownPortal",
-        jeweler = "TWN_Scos_Cerrigar_Vendor_Weapons"
+        jeweler = "TWN_Scos_Cerrigar_Vendor_Weapons",
+        gizmo_paragon_glyph_upgrade = "Gizmo_Paragon_Glyph_Upgrade"
     },
     positions = {
         obelisk_position = vec3:new(-1659.1735839844, -613.06573486328, 37.2822265625)  ,
@@ -30,4 +31,3 @@ local enums = {
 }
 
 return enums
-

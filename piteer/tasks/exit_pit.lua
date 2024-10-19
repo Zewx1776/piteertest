@@ -2,16 +2,15 @@ local utils      = require "core.utils"
 local enums      = require "data.enums"
 local tracker    = require "core.tracker"
 local explorer   = require "core.explorer"
-local settings   = require "core.settings"  -- Add this line to import settings
+local settings   = require "core.settings"
 
 local last_reset = 0
 local task = {
     name = "Exit Pit",
     shouldExecute = function()
-        -- Add a check for the exit_pit_enabled setting
         return settings.exit_pit_enabled and
-               utils.player_on_quest(enums.quests.pit_started) and 
-               not utils.player_on_quest(enums.quests.pit_ongoing)
+               utils.get_object_by_name(enums.misc.gizmo_paragon_glyph_upgrade) ~= nil and
+               utils.get_pit_portal() == nil
     end,
     Execute = function()
         console.print("Executing the task: Exit Pit.")

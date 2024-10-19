@@ -50,13 +50,28 @@ function task_manager.get_current_task()
     return current_task or { name = "Idle" }
 end
 
-local task_files = { "enter_portal", "kill_boss", "kill_monsters", "explore_pit", "town_salvage", "town_sell", "town_repaair", "open_pit", "finish_pit", "exit_pit_timeout" }
+-- Modify the task registration order
+local task_files = {
+    "enter_portal",
+    "kill_boss",
+    "kill_monsters",
+    "finish_pit",  -- Move finish_pit earlier in the list
+    "exit_pit",    -- Place exit_pit immediately after finish_pit
+    "explore_pit",
+    "town_salvage",
+    "town_sell",
+    "town_repaair",
+    "open_pit",
+    "exit_pit_timeout"
+}
+
 for _, file in ipairs(task_files) do
     local task = require("tasks." .. file)
     task_manager.register_task(task)
 end
 
--- Add the Exit Pit task separately, conditional on the new setting
+-- If you still want to conditionally add exit_pit based on settings,
+-- you can remove it from the task_files list above and keep this part:
 local exit_pit_task = require("tasks.exit_pit")
 if settings.exit_pit_enabled then
     task_manager.register_task(exit_pit_task)

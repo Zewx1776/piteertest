@@ -10,10 +10,9 @@ local loot_processed = false  -- Add a flag to track loot processing
 local task = {
     name = "Finish Pit",
     shouldExecute = function()
-        return utils.player_on_quest(enums.quests.pit_started) and 
-               not utils.player_on_quest(enums.quests.pit_ongoing) and
+        return utils.get_object_by_name(enums.misc.gizmo_paragon_glyph_upgrade) ~= nil and
                utils.loot_on_floor() and
-               not loot_processed  -- Only execute if loot has not been processed
+               not loot_processed
     end,
     Execute = function()
         console.print("Executing the task: Finish Pit.")
