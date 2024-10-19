@@ -23,10 +23,12 @@ local task  = {
                 if utils.distance_to(portal) < 2 then
                     console.print("Player is close enough to the portal. Interacting with the portal.")
                     interact_object(portal)
+                    tracker.start_location_reached = false
                 end
             else
                 console.print("Player is not on the quest 'pit_ongoing'. Interacting with the portal using loot manager.")
                 loot_manager.interact_with_object(portal)
+                tracker.start_location_reached = false
             end
         end
     end
