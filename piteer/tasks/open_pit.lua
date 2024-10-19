@@ -35,11 +35,12 @@ end
 local task = {
     name = "Open Pit",
     shouldExecute = function()
-        --console.print("Checking if the task 'Open Pit' should be executed.")
         return utils.player_in_zone("Scos_Cerrigar") and not utils.get_pit_portal()
     end,
     Execute = function()
         console.print("Executing the task: Open Pit.")
+        explorer.reset_exploration()  -- This should now work correctly
+        tracker.pit_start_time = get_time_since_inject()
         if tracker.finished_time ~= 0 then
             console.print("Resetting tracker finished time to 0.")
             tracker.finished_time = 0
@@ -56,7 +57,7 @@ local task = {
                 console.print("Interacting with obelisk.")
                 loot_manager.interact_with_object(obelisk)
 
-                if utils.distance_to(obelisk) < 2 and get_time_since_inject() - last_open > 2 then
+                if utils.distance_to(obelisk) < 3 and get_time_since_inject() - last_open > 2 then
                     console.print("Opening pit portal.")
                     local pit_level = settings.pit_level
                     local actual_address = 0x1C34EB
