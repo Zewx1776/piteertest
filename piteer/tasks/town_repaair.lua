@@ -3,6 +3,7 @@ local enums = require "data.enums"
 local explorer = require "core.explorer"
 local settings = require "core.settings"
 local gui = require "gui"
+local tracker = require "core.tracker"
 
 local task = {
     name = "Town Repair",
@@ -26,6 +27,7 @@ local task = {
             return true
         else
             console.print("No blacksmith found")
+            tracker:set_boss_task_running(false)
             explorer:set_custom_target(enums.positions.blacksmith_position)
             explorer:move_to_target()
             return false

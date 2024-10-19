@@ -72,6 +72,7 @@ local utils = require "core.utils"
 local enums = require "data.enums"
 local settings = require "core.settings"
 local tracker = require "core.tracker"
+local gui = require "gui"
 local explorer = {
     enabled = false,
     is_task_running = false, --added to prevent boss dead pathing 
@@ -79,7 +80,7 @@ local explorer = {
 }
 local explored_areas = {}
 local target_position = nil
-local grid_size = 1.5            -- Size of grid cells in meters
+local grid_size = gui.elements.explorer_grid_size_slider:get() / 10  -- Updated grid_size calculation
 local exploration_radius = 10   -- Radius in which areas are considered explored
 local explored_buffer = 2      -- Buffer around explored areas in meters
 local max_target_distance = 120 -- Maximum distance for a new target
@@ -92,8 +93,10 @@ local last_move_time = 0
 local last_explored_targets = {}
 local max_last_targets = 50
 
+-- Replace the rectangular explored_area_bounds with a table of explored circles
+local explored_circles = {}
 
--- Function to check and print pit start time and time spent in pit
+-- Function to check and print pit start time and time spent in pitre
 local function check_pit_time()
     --console.print("Checking pit start time...")  -- Add this line for debugging
     if tracker.pit_start_time > 0 then
@@ -102,6 +105,7 @@ local function check_pit_time()
         --console.print("Pit start time is not set or is zero.")  -- Add this line for debugging
     end
 end
+
 local function check_and_reset_dungeons()
     --console.print("Executing check_and_reset_dungeons") -- Debug print
     if tracker.pit_start_time > 0 then
@@ -145,13 +149,13 @@ end
 
 --ai fix for start location spamming 
 function explorer:check_start_location_reached()
-    if not self.start_location_reached then
+    if not tracker.start_location_reached then
         local start_location = utils.get_start_location_0()
         if start_location then
             local player_pos = get_player_position()
             local start_pos = start_location:get_position()
             if calculate_distance(player_pos, start_pos) < 2 then  -- Adjust this distance as needed
-                self.start_location_reached = true
+                tracker.start_location_reached = true
                 console.print("Start location reached")
             end
         end
@@ -161,8 +165,8 @@ end
 
 --ai fix for boss room
 function explorer:set_start_location_target()
-    if self.is_task_running or self.current_task == "Kill Monsters" or self.start_location_reached then
-        console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
+    if self.is_task_running or self.current_task == "Kill Monsters" or tracker.start_location_reached then
+        --console.print("Task is running, Kill Monsters task is active, or start location already reached. Skipping set_start_location_target")
         return false
     end
 
@@ -190,46 +194,64 @@ local function get_grid_key(point)
         math.floor(point:z() / grid_size)
 end
 
-
-local explored_area_bounds = {
-    min_x = math.huge,
-    max_x = -math.huge,
-    min_y = math.huge,
-    max_y = -math.huge,
-    min_z = math.huge,
-    max_z = -math.huge
-}
-local function update_explored_area_bounds(point, radius)
-    --console.print("Updating explored area bounds.")
-    explored_area_bounds.min_x = math.min(explored_area_bounds.min_x, point:x() - radius)
-    explored_area_bounds.max_x = math.max(explored_area_bounds.max_x, point:x() + radius)
-    explored_area_bounds.min_y = math.min(explored_area_bounds.min_y, point:y() - radius)
-    explored_area_bounds.max_y = math.max(explored_area_bounds.max_y, point:y() + radius)
-    explored_area_bounds.min_z = math.min(explored_area_bounds.min_z or math.huge, point:z() - radius)
-    explored_area_bounds.max_z = math.max(explored_area_bounds.max_z or -math.huge, point:z() + radius)
-end
-
-local function is_point_in_explored_area(point)
-    --console.print("Checking if point is in explored area.")
-    return point:x() >= explored_area_bounds.min_x and point:x() <= explored_area_bounds.max_x and
-        point:y() >= explored_area_bounds.min_y and point:y() <= explored_area_bounds.max_y and
-        point:z() >= explored_area_bounds.min_z and point:z() <= explored_area_bounds.max_z
-end
-
+-- Update the mark_area_as_explored function
 local function mark_area_as_explored(center, radius)
-    --console.print("Marking area as explored.")
-    update_explored_area_bounds(center, radius)
-    -- Hier können Sie zusätzliche Logik hinzufügen, um die erkundeten Bereiche zu markieren
-    -- z.B. durch Hinzufügen zu einer Datenstruktur oder durch Setzen von Flags
+    console.print(string.format("Marking area as explored: Center (%.2f, %.2f, %.2f), Radius: %.2f", center:x(), center:y(), center:z(), radius))
+    table.insert(explored_circles, {center = center, radius = radius})
+    console.print(string.format("Total explored circles: %d", #explored_circles))
+end
+
+-- Update the is_point_in_explored_area function
+local function is_point_in_explored_area(point)
+    --console.print(string.format("Checking if point (%.2f, %.2f, %.2f) is in explored area", point:x(), point:y(), point:z()))
+    for _, circle in ipairs(explored_circles) do
+        local distance = calculate_distance(point, circle.center)
+        if distance <= circle.radius then
+            --console.print("Point is in explored area")
+            return true
+        end
+    end
+    console.print("Point is not in explored area")
+    return false
+end
+
+-- Add a new function to find the nearest unexplored point
+local function find_nearest_unexplored_point(start_point, max_distance)
+    local player_pos = get_player_position()
+    local check_radius = max_distance or max_target_distance
+    local nearest_point = nil
+    local nearest_distance = math.huge
+
+    for x = -check_radius, check_radius, grid_size do
+        for y = -check_radius, check_radius, grid_size do
+            local point = vec3:new(
+                start_point:x() + x,
+                start_point:y() + y,
+                start_point:z()
+            )
+            point = set_height_of_valid_position(point)
+
+            if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) then
+                local distance = calculate_distance(player_pos, point)
+                if distance < nearest_distance then
+                    nearest_point = point
+                    nearest_distance = distance
+                end
+            end
+        end
+    end
+
+    return nearest_point
 end
 
 local function check_walkable_area()
-    --console.print("Checking walkable area.")
-    if os.time() % 1 ~= 0 then return end  -- Only run every 5 seconds
+    console.print("Checking walkable area")
+    if os.time() % 2 ~= 0 then return end  -- Only run every 5 seconds
 
     local player_pos = get_player_position()
-    local check_radius = 15 -- Überprüfungsradius in Metern
+    local check_radius = 5 -- Überprüfungsradius in Metern
 
+    console.print(string.format("Player position: (%.2f, %.2f, %.2f)", player_pos:x(), player_pos:y(), player_pos:z()))
     mark_area_as_explored(player_pos, exploration_radius)
 
     for x = -check_radius, check_radius, grid_size do
@@ -255,14 +277,70 @@ local function check_walkable_area()
     end
 end
 
-local function reset_exploration()
-    --console.print("Resetting exploration.")
-    explored_area_bounds = {
-        min_x = math.huge,
-        max_x = -math.huge,
-        min_y = math.huge,
-        max_y = -math.huge,
-    }
+local furthest_circle_index = 1
+
+local function find_distant_explored_circle()
+    console.print("Finding distant explored circle.")
+    local player_pos = get_player_position()
+    local valid_circles = {}
+
+    for i, circle in ipairs(explored_circles) do
+        local distance = calculate_distance(player_pos, circle.center)
+        if distance >= 60 and distance <= 120 then
+            table.insert(valid_circles, {index = i, circle = circle, distance = distance})
+        end
+    end
+
+    if #valid_circles == 0 then
+        console.print("No circles found within 60-120 distance range.")
+        return nil
+    end
+
+    -- Sort valid circles by distance, furthest first
+    table.sort(valid_circles, function(a, b) return a.distance > b.distance end)
+
+    -- Select the next circle in the cycle
+    local selected_circle = valid_circles[furthest_circle_index]
+    furthest_circle_index = (furthest_circle_index % #valid_circles) + 1
+
+    if selected_circle then
+        console.print(string.format("Selected circle at (%.2f, %.2f, %.2f), distance: %.2f",
+            selected_circle.circle.center:x(), selected_circle.circle.center:y(), selected_circle.circle.center:z(), selected_circle.distance))
+    else
+        console.print("No valid circle selected.")
+    end
+
+    return selected_circle and selected_circle.circle or nil
+end
+
+-- Update the find_explored_direction_target function
+local function find_explored_direction_target()
+    console.print("Finding explored direction target.")
+    local player_pos = get_player_position()
+    
+    -- First, try to find an unexplored point near the player
+    local nearby_unexplored = find_nearest_unexplored_point(player_pos, exploration_radius * 2)
+    if nearby_unexplored then
+        console.print("Found nearby unexplored point. Switching to unexplored mode.")
+        exploration_mode = "unexplored"
+        return nearby_unexplored
+    end
+    
+    -- If no nearby unexplored point, find a distant explored circle
+    local distant_circle = find_distant_explored_circle()
+    if distant_circle then
+        console.print("Moving towards the center of a distant explored circle.")
+        return distant_circle.center
+    end
+    
+    -- If no explored circles found, return nil
+    console.print("No suitable explored circles found.")
+    return nil
+end
+
+-- Update the reset_exploration function
+function explorer.reset_exploration()
+    explored_circles = {}
     target_position = nil
     last_position = nil
     last_move_time = 0
@@ -418,83 +496,6 @@ local function add_to_last_targets(point)
     end
 end
 
-local function find_nearby_unexplored_point(center, radius)
-    local check_radius = max_target_distance
-    local player_pos = get_player_position()
-
-    for x = -check_radius, check_radius, grid_size do
-        for y = -check_radius, check_radius, grid_size do
-            local point = vec3:new(
-                center:x() + x,
-                center:y() + y,
-                center:z()
-            )
-
-            point = set_height_of_valid_position(point)
-
-            if utility.is_point_walkeable(point) and not is_point_in_explored_area(point) then
-                return point
-            end
-        end
-    end
-
-    return nil
-end
-
-local function find_explored_direction_target()
-    console.print("Finding explored direction target.")
-    local player_pos = get_player_position()
-    local max_attempts = 500
-    local attempts = 0
-    local best_target = nil
-    local best_distance = math.huge -- Initialize to a large value to find the closest point
-
-    while attempts < max_attempts do
-        attempts = attempts + 1
-        local direction_vector = vec3:new(
-            exploration_direction.x * max_target_distance * 0.4,
-            exploration_direction.y * max_target_distance * 0.4,
-            0
-        )
-        local target_point = player_pos + direction_vector
-        target_point = set_height_of_valid_position(target_point)
-
-        if utility.is_point_walkeable(target_point) and is_point_in_explored_area(target_point) then
-            local distance = calculate_distance(player_pos, target_point)
-            if distance < best_distance and not is_in_last_targets(target_point) then
-                best_target = target_point
-                best_distance = distance
-
-                -- Check for nearby unexplored points
-                local nearby_unexplored_point = find_nearby_unexplored_point(target_point, exploration_radius)
-                if nearby_unexplored_point then
-                    console.print("Nearby unexplored point found. Switching to unexplored mode.")
-                    exploration_mode = "unexplored"
-                    return nearby_unexplored_point
-                end
-            end
-        else
-            --console.print("Attempt " .. attempts .. ": Target point is not walkable or not in explored area.")
-        end
-
-        -- Change the direction slightly for the next attempt
-        local angle = math.atan2(exploration_direction.y, exploration_direction.x) + math.random() * math.pi / 4 - math.pi / 8
-        exploration_direction.x = math.cos(angle)
-        exploration_direction.y = math.sin(angle)
-    end
-
-    if best_target then
-        add_to_last_targets(best_target)
-        console.print("Found best target after " .. attempts .. " attempts.")
-        return best_target
-    else
-        console.print("Could not find a valid explored target after " .. max_attempts .. " attempts.")
-        return nil
-    end
-end
-
-
-
 local function find_unstuck_target()
     console.print("Finding unstuck target.")
     local player_pos = get_player_position()
@@ -523,6 +524,8 @@ local function find_unstuck_target()
     return nil
 end
 
+
+
 local function find_target(include_explored)
     console.print("Finding target.")
     last_movement_direction = nil -- Reset the last movement direction
@@ -546,10 +549,16 @@ local function find_target(include_explored)
             if explored_target then
                 return explored_target
             else
-                console.print("No valid explored targets found. Resetting exploration.")
-                reset_exploration()
-                exploration_mode = "unexplored"
-                return find_central_unexplored_target()
+                console.print("No valid explored targets found. Attempting to move to furthest explored circle.")
+                local furthest_circle = find_distant_explored_circle()
+                if furthest_circle then
+                    return furthest_circle.center
+                else
+                    console.print("No explored circles found. Resetting exploration.")
+                    --explorer.reset_exploration()
+                    exploration_mode = "unexplored"
+                    return find_central_unexplored_target()
+                end
             end
         end
     end
@@ -694,6 +703,9 @@ local function a_star(start, goal)
 end
 
 local last_a_star_call = 0.0
+local path_recalculation_interval = 1.0 -- Recalculate path every 2 seconds
+local last_path_recalculation = 0.0
+
 local function move_to_target()
     if tracker:is_boss_task_running() then
         return  -- Do not set a path if the boss task is running
@@ -722,6 +734,14 @@ local function move_to_target()
             end
         end
 
+        local current_time = get_time_since_inject()
+        if current_time - last_path_recalculation > path_recalculation_interval then
+            local player_pos = get_player_position()
+            current_path = a_star(player_pos, target_position)
+            path_index = 1
+            last_path_recalculation = current_time
+        end
+
         local next_point = current_path[path_index]
         if next_point and not next_point:is_zero() then
             -- Attempt to use a movement spell (including evade) to the next point
@@ -748,7 +768,7 @@ local function move_to_target()
 
             -- Check for nearby unexplored points when in explored mode
             if exploration_mode == "explored" then
-                local nearby_unexplored_point = find_nearby_unexplored_point(player_pos, exploration_radius)
+                local nearby_unexplored_point = find_nearest_unexplored_point(player_pos, exploration_radius)
                 if nearby_unexplored_point then
                     exploration_mode = "unexplored"
                     target_position = nearby_unexplored_point
@@ -831,6 +851,13 @@ function explorer:move_to_target()
     move_to_target()
 end
 
+-- Update the draw_explored_area_bounds function
+local function draw_explored_area_bounds()
+    for _, circle in ipairs(explored_circles) do
+        graphics.circle_3d(circle.center, circle.radius, color_orange(255))
+    end
+end
+
 local last_call_time = 0.0
 local is_player_on_quest = false
 on_update(function()
@@ -850,20 +877,15 @@ on_update(function()
         end
     end
 
-    --local auto_play_objective = auto_play.get_objective()
-    --local should_sell = auto_play_objective == objective.sell
-    --if should_sell then
-    --    return -- stop code here
-    --end
-
     local current_core_time = get_time_since_inject()
-    if current_core_time - last_call_time > 0.45 then
+    if current_core_time - last_call_time > 0.55 then
         last_call_time = current_core_time
         is_player_on_quest = utils.player_on_quest(enums.quests.pit_ongoing) and settings.enabled
         if not is_player_on_quest then
             return
         end
 
+        console.print("Calling check_walkable_area")
         check_walkable_area()
         local is_stuck = check_if_stuck()
         if is_stuck then
@@ -897,7 +919,6 @@ on_update(function()
 end)
 
 on_render(function()
-    
     if not settings.enabled then
         return
     end
@@ -921,6 +942,9 @@ on_render(function()
     end
 
     graphics.text_2d("Mode: " .. exploration_mode, vec2:new(10, 10), 20, color_white(255))
+
+    -- Add this line to draw the explored area bounds
+    draw_explored_area_bounds()
 end)
 
 return explorer
