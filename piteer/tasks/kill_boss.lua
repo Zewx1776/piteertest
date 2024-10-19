@@ -125,7 +125,7 @@ local is_boss_task_active = false
 local task = {
     name = "Kill Boss",
     shouldExecute = function()
-        if not utils.player_in_zone("EGD_MSWK_World_02") then
+        if not (utils.player_in_zone("EGD_MSWK_World_02") or utils.player_in_zone("EGD_MSWK_World_01")) then
             return false
         end
 
