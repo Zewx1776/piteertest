@@ -53,6 +53,7 @@ end
 -- Modify the task registration order
 local task_files = {
     "enter_portal",
+    "stupid_ladder",
     "kill_boss",
     "kill_monsters",
     "finish_pit",  -- Move finish_pit earlier in the list

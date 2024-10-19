@@ -211,7 +211,7 @@ local function is_point_in_explored_area(point)
             return true
         end
     end
-    console.print("Point is not in explored area")
+    --console.print("Point is not in explored area")
     return false
 end
 

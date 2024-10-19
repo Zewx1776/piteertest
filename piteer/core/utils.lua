@@ -90,12 +90,18 @@ end
 
 function utils.get_pit_portal()
     local actors = actors_manager:get_all_actors()
+    local player_pos = get_player_position()
     for _, actor in pairs(actors) do
         local name = actor:get_skin_name()
         if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
-            return actor
+            local portal_pos = actor:get_position()
+            local distance = player_pos:dist_to(portal_pos)
+            if distance <= 30 then
+                return actor
+            end
         end
     end
+    return nil
 end
 
 local uber_table = { -- Should be all uber items :)
