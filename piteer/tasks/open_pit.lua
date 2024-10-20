@@ -12,6 +12,7 @@ local function reset_pit_values()
     tracker.finished_time = 0
     tracker.pit_start_time = 0
     explorer.is_task_running = false
+    tracker:set_boss_task_running(false)
     -- Reset last_reset in exit_pit.lua
     -- Since we can't directly access variables in other files,
     -- we'll need to create a function in exit_pit.lua to reset it
