@@ -280,7 +280,7 @@ end
 local furthest_circle_index = 1
 
 local function find_distant_explored_circle()
-    console.print("Finding distant explored circle.")
+    --console.print("Finding distant explored circle.")
     local player_pos = get_player_position()
     local valid_circles = {}
 
@@ -292,7 +292,7 @@ local function find_distant_explored_circle()
     end
 
     if #valid_circles == 0 then
-        console.print("No circles found within 60-120 distance range.")
+        --console.print("No circles found within 60-120 distance range.")
         return nil
     end
 
@@ -304,10 +304,10 @@ local function find_distant_explored_circle()
     furthest_circle_index = (furthest_circle_index % #valid_circles) + 1
 
     if selected_circle then
-        console.print(string.format("Selected circle at (%.2f, %.2f, %.2f), distance: %.2f",
-            selected_circle.circle.center:x(), selected_circle.circle.center:y(), selected_circle.circle.center:z(), selected_circle.distance))
+        --console.print(string.format("Selected circle at (%.2f, %.2f, %.2f), distance: %.2f",
+        --    selected_circle.circle.center:x(), selected_circle.circle.center:y(), selected_circle.circle.center:z(), selected_circle.distance))
     else
-        console.print("No valid circle selected.")
+        --console.print("No valid circle selected.")
     end
 
     return selected_circle and selected_circle.circle or nil
@@ -315,13 +315,13 @@ end
 
 -- Update the find_explored_direction_target function
 local function find_explored_direction_target()
-    console.print("Finding explored direction target.")
+    --console.print("Finding explored direction target.")
     local player_pos = get_player_position()
     
     -- First, try to find an unexplored point near the player
     local nearby_unexplored = find_nearest_unexplored_point(player_pos, exploration_radius * 2)
     if nearby_unexplored then
-        console.print("Found nearby unexplored point. Switching to unexplored mode.")
+        --console.print("Found nearby unexplored point. Switching to unexplored mode.")
         exploration_mode = "unexplored"
         return nearby_unexplored
     end
@@ -329,12 +329,12 @@ local function find_explored_direction_target()
     -- If no nearby unexplored point, find a distant explored circle
     local distant_circle = find_distant_explored_circle()
     if distant_circle then
-        console.print("Moving towards the center of a distant explored circle.")
+        --console.print("Moving towards the center of a distant explored circle.")
         return distant_circle.center
     end
     
     -- If no explored circles found, return nil
-    console.print("No suitable explored circles found.")
+    --console.print("No suitable explored circles found.")
     return nil
 end
 
@@ -375,7 +375,7 @@ local function is_near_wall(point)
 end
 
 local function find_central_unexplored_target()
-    console.print("Finding central unexplored target.")
+    --console.print("Finding central unexplored target.")
     local player_pos = get_player_position()
     local check_radius = max_target_distance
     local unexplored_points = {}
@@ -446,7 +446,7 @@ local function find_central_unexplored_target()
 end
 
 local function find_random_explored_target()
-    console.print("Finding random explored target.")
+    --console.print("Finding random explored target.")
     local player_pos = get_player_position()
     local check_radius = max_target_distance
     local explored_points = {}
@@ -497,7 +497,7 @@ local function add_to_last_targets(point)
 end
 
 local function find_unstuck_target()
-    console.print("Finding unstuck target.")
+    --console.print("Finding unstuck target.")
     local player_pos = get_player_position()
     local valid_targets = {}
 
@@ -527,7 +527,7 @@ end
 
 
 local function find_target(include_explored)
-    console.print("Finding target.")
+    --console.print("Finding target.")
     last_movement_direction = nil -- Reset the last movement direction
 
     if include_explored then
@@ -539,7 +539,7 @@ local function find_target(include_explored)
                 return unexplored_target
             else
                 exploration_mode = "explored"
-                console.print("No unexplored areas found. Switching to explored mode.")
+                --console.print("No unexplored areas found. Switching to explored mode.")
                 last_explored_targets = {} -- Reset last targets when switching modes
             end
         end
@@ -549,12 +549,12 @@ local function find_target(include_explored)
             if explored_target then
                 return explored_target
             else
-                console.print("No valid explored targets found. Attempting to move to furthest explored circle.")
+                --console.print("No valid explored targets found. Attempting to move to furthest explored circle.")
                 local furthest_circle = find_distant_explored_circle()
                 if furthest_circle then
                     return furthest_circle.center
                 else
-                    console.print("No explored circles found. Resetting exploration.")
+                    --console.print("No explored circles found. Resetting exploration.")
                     --explorer.reset_exploration()
                     exploration_mode = "unexplored"
                     return find_central_unexplored_target()
@@ -661,7 +661,7 @@ local function a_star(start, goal)
     while not open_set:empty() do
         iterations = iterations + 1
         if iterations > 6666 then
-            console.print("Max iterations reached, aborting!")
+            --console.print("Max iterations reached, aborting!")
             break
         end
 
@@ -694,9 +694,9 @@ local function a_star(start, goal)
     if target_distance_index < #target_distance_states then
         target_distance_index = target_distance_index + 1
         max_target_distance = target_distance_states[target_distance_index]
-        console.print("No path found. Reducing max target distance to " .. max_target_distance)
+        --console.print("No path found. Reducing max target distance to " .. max_target_distance)
     else
-        console.print("No path found even after reducing max target distance.")
+        --console.print("No path found even after reducing max target distance.")
     end
 
     return nil
@@ -728,7 +728,7 @@ local function move_to_target()
             last_a_star_call = current_core_time
 
             if not current_path then
-                console.print("No path found to target. Finding new target.")
+                --console.print("No path found to target. Finding new target.")
                 target_position = find_target(false)
                 return
             end
@@ -772,7 +772,7 @@ local function move_to_target()
                 if nearby_unexplored_point then
                     exploration_mode = "unexplored"
                     target_position = nearby_unexplored_point
-                    console.print("Found nearby unexplored area. Switching back to unexplored mode.")
+                    --console.print("Found nearby unexplored area. Switching back to unexplored mode.")
                     last_explored_targets = {}
                     current_path = nil
                     path_index = 1
@@ -782,7 +782,7 @@ local function move_to_target()
                     if unexplored_target then
                         exploration_mode = "unexplored"
                         target_position = unexplored_target
-                        console.print("Found new unexplored area. Switching back to unexplored mode.")
+                        --console.print("Found new unexplored area. Switching back to unexplored mode.")
                         last_explored_targets = {}
                     end
                 end
@@ -815,7 +815,7 @@ end
 explorer.check_if_stuck = check_if_stuck
 
 function explorer:set_custom_target(target)
-    console.print("Setting custom target.")
+    --console.print("Setting custom target.")
     target_position = target
 end
 
@@ -836,12 +836,12 @@ function explorer:movement_spell_to_target(target)
             -- Cast the dash spell towards the target's position
             local success = cast_spell.position(spell_id, target, 3.0) -- A little delay or else rogue goes turbo in dashing
             if success then
-                console.print("Successfully used movement spell to target.")
+                --console.print("Successfully used movement spell to target.")
             else
-                console.print("Failed to use movement spell.")
+                --console.print("Failed to use movement spell.")
             end
         else
-            console.print("Movement spell on cooldown.")
+            --console.print("Movement spell on cooldown.")
         end
     end
 end
@@ -885,11 +885,11 @@ on_update(function()
             return
         end
 
-        console.print("Calling check_walkable_area")
+        --console.print("Calling check_walkable_area")
         check_walkable_area()
         local is_stuck = check_if_stuck()
         if is_stuck then
-            console.print("Character was stuck. Finding new target and attempting revive")
+            --console.print("Character was stuck. Finding new target and attempting revive")
             target_position = find_target(true)
             target_position = set_height_of_valid_position(target_position)
             last_move_time = os.time()
