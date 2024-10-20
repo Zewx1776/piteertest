@@ -17,7 +17,7 @@ local task = {
         explorer.is_task_running = true
         explorer:clear_path_and_target()
         
-        tracker:set_boss_task_running(true)
+        tracker:set_boss_task_running(false)
         
         local current_time = get_time_since_inject()
         console.print(string.format("Current time: %.2f, Start time: %.2f", current_time, start_time))
