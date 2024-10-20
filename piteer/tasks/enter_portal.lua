@@ -2,7 +2,9 @@ local utils = require "core.utils"
 local enums = require "data.enums"
 local explorer = require "core.explorer"
 local tracker = require "core.tracker"
-local settings = require "core.settings"  -- Make sure to include settings
+local settings = require "core.settings"
+
+local portal_interaction_time = 0
 
 local task  = {
     name = "Enter Portal",
@@ -35,6 +37,7 @@ local task  = {
                     interact_object(portal)
                     tracker.start_location_reached = false
                     console.print("Set tracker.start_location_reached to false")
+                    portal_interaction_time = get_time_since_inject()
                 end
             else
                 console.print("Player is not in the pit zone.")
@@ -43,12 +46,23 @@ local task  = {
                     loot_manager.interact_with_object(portal)
                     tracker.start_location_reached = false
                     console.print("Set tracker.start_location_reached to false")
+                    portal_interaction_time = get_time_since_inject()
                 else
                     console.print("Player is not in Cerrigar. Using regular interact_object.")
                     interact_object(portal)
                     tracker.start_location_reached = false
                     console.print("Set tracker.start_location_reached to false")
+                    portal_interaction_time = get_time_since_inject()
                 end
+            end
+
+            -- Add the 5-second timer check
+            local current_time = get_time_since_inject()
+            if portal_interaction_time > 0 and current_time - portal_interaction_time < 5 then
+                console.print("Waiting for 5 seconds after portal interaction...")
+                return
+            else
+                portal_interaction_time = 0
             end
         else
             console.print("Portal not found in Execute function.")

@@ -9,9 +9,9 @@ local stuck_position = nil
 local task = {
     name = "Kill Monsters",
     shouldExecute = function()
-        if not utils.player_on_quest(enums.quests.pit_ongoing) then
-            return false
-        end
+        --if not utils.player_on_quest(enums.quests.pit_ongoing) then
+        --    return false
+        --end
 
         local close_enemy = utils.get_closest_enemy()
         return close_enemy ~= nil

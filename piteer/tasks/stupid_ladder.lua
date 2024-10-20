@@ -23,7 +23,7 @@ local task = {
             console.print("Controller position: " .. tostring(controller_pos:x()) .. ", " .. tostring(controller_pos:y()) .. ", " .. tostring(controller_pos:z()))
             
             console.print("Clearing path and setting custom target")
-            explorer:clear_path_and_target()
+            --explorer:clear_path_and_target()
             explorer:set_custom_target(controller_pos)
             
             console.print("Moving to target")
@@ -32,7 +32,7 @@ local task = {
             local distance = utils.distance_to(controller_pos)
             console.print("Distance to controller: " .. tostring(distance))
 
-            if distance < 2 then
+            if distance < 1 then
                 console.print("Reached Traversal Controller")
                 tracker.traversal_controller_reached = true
                 console.print("Set tracker.traversal_controller_reached to true")

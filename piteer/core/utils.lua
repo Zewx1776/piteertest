@@ -96,7 +96,7 @@ function utils.get_pit_portal()
         if name == enums.portal_names.demise or name == enums.portal_names.guardians_lair or name == enums.portal_names.pit_portal then
             local portal_pos = actor:get_position()
             local distance = player_pos:dist_to(portal_pos)
-            if distance <= 30 then
+            if distance <= 100 then
                 return actor
             end
         end

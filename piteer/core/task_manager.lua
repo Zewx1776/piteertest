@@ -57,13 +57,12 @@ local task_files = {
     "kill_boss",
     "kill_monsters",
     "finish_pit",  -- Move finish_pit earlier in the list
-    "exit_pit",    -- Place exit_pit immediately after finish_pit
+    --"exit_pit",    -- Place exit_pit immediately after finish_pit
     "explore_pit",
     "town_salvage",
     "town_sell",
     "town_repaair",
-    "open_pit",
-    "exit_pit_timeout"
+    "open_pit"
 }
 
 for _, file in ipairs(task_files) do

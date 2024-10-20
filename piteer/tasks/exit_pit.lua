@@ -6,7 +6,6 @@ local settings   = require "core.settings"
 
 local last_reset = get_time_since_inject()
 local cooldown_period = 60 -- 60 seconds cooldown
-local last_reset_time = 0
 local first_run = true
 
 local task = {
@@ -18,37 +17,37 @@ local task = {
     end,
     Execute = function()
         console.print("Executing the task: Exit Pit.")
-        explorer.is_task_running = true  -- Set the flag
+        explorer.is_task_running = true
         explorer:clear_path_and_target()
 
         if first_run then
-            console.print("First run of Exit Pit task. Resetting tracker.finished_time to 0.")
-            tracker.finished_time = 0
+            console.print("First run of Exit Pit task. Resetting tracker.finished_time to current time.")
+            tracker.finished_time = get_time_since_inject()
             first_run = false
         end
 
-        console.print("Debug: Current time: " .. get_time_since_inject())
+        local current_time = get_time_since_inject()
+        local time_since_finish = current_time - tracker.finished_time
+        local time_since_last_reset = current_time - last_reset
+
+        console.print("Debug: Current time: " .. current_time)
         console.print("Debug: tracker.finished_time: " .. tracker.finished_time)
-        console.print("Debug: Time since last reset: " .. (get_time_since_inject() - last_reset))
+        console.print("Debug: Time since finish: " .. time_since_finish)
+        console.print("Debug: Time since last reset: " .. time_since_last_reset)
 
-        if get_time_since_inject() > tracker.finished_time + 10 then
-            if get_time_since_inject() - last_reset > 20 and get_time_since_inject() - last_reset_time > cooldown_period then
-                last_reset = get_time_since_inject()
-                last_reset_time = get_time_since_inject()
+        if time_since_finish > 40 then
+            if time_since_last_reset > cooldown_period then
+                last_reset = current_time
                 reset_all_dungeons()
-                console.print("Resetting all dungeons at time: " .. get_time_since_inject())
+                console.print("Resetting all dungeons at time: " .. current_time)
+            else
+                console.print("Cooldown period not met. Skipping reset. Time remaining: " .. (cooldown_period - time_since_last_reset))
             end
+        else
+            console.print("Not enough time has passed since last finish. Time remaining: " .. (40 - time_since_finish))
         end
 
-        -- Check if the player is no longer on the quest 'pit_started'
-        if not utils.player_on_quest(enums.quests.pit_started) then
-            console.print("Player is no longer on the quest 'pit_started'. Exiting task.")
-            explorer.is_task_running = false  -- Reset the flag
-            return task
-        end
-
-        explorer.is_task_running = false  -- Reset the flag
-        console.print("Setting explorer task running flag to false.")
+        explorer.is_task_running = false
     end
 }
 

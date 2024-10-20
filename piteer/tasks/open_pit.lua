@@ -7,6 +7,19 @@ local explorer   = require "core.explorer"
 
 local last_open  = 0
 
+-- Add this function to reset all necessary values
+local function reset_pit_values()
+    tracker.finished_time = 0
+    tracker.pit_start_time = 0
+    explorer.is_task_running = false
+    -- Reset last_reset in exit_pit.lua
+    -- Since we can't directly access variables in other files,
+    -- we'll need to create a function in exit_pit.lua to reset it
+    if exit_pit and exit_pit.reset_last_reset then
+        exit_pit.reset_last_reset()
+    end
+end
+
 local function set_height_of_valid_position(point)
     --console.print("Setting height of valid position.")
     return utility.set_height_of_valid_position(point)
@@ -40,6 +53,10 @@ local task = {
     Execute = function()
         console.print("Executing the task: Open Pit.")
         explorer.reset_exploration()  -- This should now work correctly
+        
+        -- Add this line to reset all necessary values
+        reset_pit_values()
+        
         tracker.pit_start_time = get_time_since_inject()
         if tracker.finished_time ~= 0 then
             console.print("Resetting tracker finished time to 0.")

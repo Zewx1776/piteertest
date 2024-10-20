@@ -201,4 +201,8 @@ on_render(function()
     end
 end)
 
+tracker.finished_time = 0
+tracker.pit_start_time = 0
+tracker.boss_killed = false
+
 return task
