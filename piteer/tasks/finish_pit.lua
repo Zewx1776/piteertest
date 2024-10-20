@@ -16,7 +16,8 @@ local task = {
         console.print("Executing the task: Finish Pit.")
         explorer.is_task_running = true
         explorer:clear_path_and_target()
-        tracker.set_boss_task_running(false)
+        
+        tracker:set_boss_task_running(true)
         
         local current_time = get_time_since_inject()
         console.print(string.format("Current time: %.2f, Start time: %.2f", current_time, start_time))
