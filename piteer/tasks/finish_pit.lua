@@ -5,15 +5,12 @@ local settings = require "core.settings"
 local tracker = require "core.tracker"
 
 local start_time = 0
-local loot_processed = false
 
 local task = {
     name = "Finish Pit",
     shouldExecute = function()
         console.print("Checking if Finish Pit task should execute...")
-        return utils.get_object_by_name(enums.misc.gizmo_paragon_glyph_upgrade) ~= nil and
-               utils.loot_on_floor() and
-               not loot_processed
+        return utils.get_object_by_name(enums.misc.gizmo_paragon_glyph_upgrade) ~= nil
     end,
     Execute = function()
         console.print("Executing the task: Finish Pit.")
