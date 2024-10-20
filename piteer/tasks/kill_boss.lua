@@ -84,7 +84,7 @@ local function use_movement_spell_to_target(target)
         288106, -- Sorcerer teleport
         358761, -- Rogue dash
         355606, -- Rogue shadow step
-        337031  -- General Evade
+        --337031  -- General Evade
     }
 
     for _, spell_id in ipairs(movement_spell_id) do
