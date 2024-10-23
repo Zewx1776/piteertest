@@ -19,7 +19,7 @@ gui.loot_modes_enum = {
     STASH = 3,
 }
 
-gui.gamble_categories = {"Cap", "Whispering Key", "Tunic", "Gloves", "Boots", "Pants", "Amulet", "Ring", "Polearm", "Glaive"}
+gui.gamble_categories = {"Cap", "Whispering Key", "Tunic", "Gloves", "Boots", "Pants", "Amulet", "Ring", "Polearm", "Glaive", "Quarterstaff" }
 
 gui.elements = {
     main_tree = tree_node:new(0),
