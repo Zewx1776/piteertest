@@ -7,7 +7,9 @@ local settings = {
     path_angle = 0,
     reset_time = 1, -- Default to 1
     exit_pit_enabled = true, -- Default to true
-    explorer_grid_size = 10
+    explorer_grid_size = 10,
+    gamble_category = "Cap",
+    greater_affix_threshold = 1,
 }
 
 function settings:update_settings()
@@ -20,6 +22,8 @@ function settings:update_settings()
     settings.reset_time = gui.elements.reset_time_slider:get()
     settings.exit_pit_enabled = gui.elements.exit_pit_toggle:get()
     settings.explorer_grid_size = gui.elements.explorer_grid_size_slider:get()
+    settings.gamble_category = gui.gamble_categories[gui.elements.gamble_category:get() + 1]
+    settings.greater_affix_threshold = gui.elements.greater_affix_slider:get()
 end
 
 return settings

@@ -1,6 +1,6 @@
 local utils = require "core.utils"
 local enums = require "data.enums"
-local explorer = require "core.explorer"
+local explorerlite = require "core.explorerlite"
 local settings = require "core.settings"
 local gui = require "gui"
 local tracker = require "core.tracker"
@@ -15,8 +15,8 @@ local task = {
         local blacksmith = utils.get_blacksmith()
         if blacksmith then
             console.print("Setting target to BLACKSMITH: " .. blacksmith:get_skin_name())
-            explorer:set_custom_target(blacksmith)
-            explorer:move_to_target()
+            explorerlite:set_custom_target(blacksmith)
+            explorerlite:move_to_target()
 
             -- Check if the player is close enough to interact with the blacksmith
             if utils.distance_to(blacksmith) < 2 then
@@ -28,8 +28,8 @@ local task = {
         else
             console.print("No blacksmith found")
             tracker:set_boss_task_running(false)
-            explorer:set_custom_target(enums.positions.blacksmith_position)
-            explorer:move_to_target()
+            explorerlite:set_custom_target(enums.positions.blacksmith_position)
+            explorerlite:move_to_target()
             return false
         end 
     end
