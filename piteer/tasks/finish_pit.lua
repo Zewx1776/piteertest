@@ -9,7 +9,7 @@ local start_time = 0
 local task = {
     name = "Finish Pit",
     shouldExecute = function()
-        console.print("Checking if Finish Pit task should execute...")
+        --console.print("Checking if Finish Pit task should execute...")
         return utils.get_object_by_name(enums.misc.gizmo_paragon_glyph_upgrade) ~= nil
     end,
     Execute = function()
@@ -63,7 +63,7 @@ local task = {
 
         current_time = get_time_since_inject()
         console.print(string.format("Current time: %.2f, Start time: %.2f", current_time, start_time))
-        if current_time - start_time > 25 then
+        if current_time - start_time > 10 then
             console.print("25 seconds have passed. Resetting task and dungeons.")
             start_time = 0
             explorer.is_task_running = false

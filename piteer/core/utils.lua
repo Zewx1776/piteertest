@@ -135,6 +135,18 @@ function utils.get_obelisk()
     end
 end
 
+function utils.get_gambler()
+    local actors = actors_manager:get_all_actors()
+    for _, actor in pairs(actors) do
+        local name = actor:get_skin_name()
+        if name == "TWN_Scos_Cerrigar_Vendor_Gambler" then
+            console.print("Gambler found: " .. name)
+            return actor
+        end
+    end
+    return nil
+end
+
 function utils.loot_on_floor()
     return loot_manager.any_item_around(get_player_position(), 30, true, true)
 end
@@ -222,7 +234,7 @@ end
 
 
 function utils.is_inventory_full()
-    return get_local_player():get_item_count() >= 28
+    return get_local_player():get_item_count() >= 20
 end
 
 

@@ -1,6 +1,6 @@
 local utils = require "core.utils"
 local enums = require "data.enums"
-local explorer = require "core.explorer"
+local explorerlite = require "core.explorerlite"
 local settings = require "core.settings"
 local tracker = require "core.tracker"
 local gui = require "gui"
@@ -49,7 +49,7 @@ local function salvage_low_greater_affix_items()
             local greater_affix_count = utils.get_greater_affix_count(display_name)
             local item_id = inventory_item:get_sno_id()
 
-            if greater_affix_count < 1 and not is_uber_item(item_id) then
+            if greater_affix_count < settings.greater_affix_threshold and not is_uber_item(item_id) then
                 loot_manager.salvage_specific_item(inventory_item)
             end
         end
@@ -139,7 +139,7 @@ end
 
 function town_salvage_task.teleport_to_town()
     console.print("Teleporting to town")
-    explorer:clear_path_and_target()
+    explorerlite:clear_path_and_target()
     teleport_to_waypoint(enums.waypoints.CERRIGAR)
     town_salvage_task.teleport_start_time = get_time_since_inject()
     console.print("Teleport command issued")
@@ -174,22 +174,38 @@ end
 function town_salvage_task.move_to_blacksmith()
     tracker:set_boss_task_running(false)
     console.print("Moving to blacksmith")
-    console.print("Explorer object: " .. tostring(explorer))
-    console.print("set_custom_target exists: " .. tostring(type(explorer.set_custom_target) == "function"))
-    console.print("move_to_target exists: " .. tostring(type(explorer.move_to_target) == "function"))
+    console.print("Explorer object: " .. tostring(explorerlite))
+    console.print("set_custom_target exists: " .. tostring(type(explorerlite.set_custom_target) == "function"))
+    console.print("move_to_target exists: " .. tostring(type(explorerlite.move_to_target) == "function"))
+    
     local blacksmith = utils.get_blacksmith()
     if blacksmith then
-        explorer:set_custom_target(blacksmith:get_position())
-        explorer:move_to_target()
+        explorerlite:set_custom_target(blacksmith:get_position())
+        explorerlite:move_to_target()
         if utils.distance_to(blacksmith) < 2 then
             console.print("Reached blacksmith")
             town_salvage_task.current_state = salvage_state.INTERACTING_WITH_BLACKSMITH
         end
     else
-        console.print("No blacksmith found, retrying...")
+        console.print("No blacksmith found, trying alternative positions...")
+        local alternative_positions = {
+            enums.positions.blacksmith_position,
+            vec3:new(-1672.0946044922, -597.67523193359, 36.9287109375),  -- Add more alternative positions here
+            vec3:new(-1672.1946044922, -597.57523193359, 36.8287109375),
+        }
+        
+        for _, pos in ipairs(alternative_positions) do
+            explorerlite:set_custom_target(pos)
+            explorerlite:move_to_target()
+            if utils.distance_to(pos) < 5 then
+                console.print("Reached alternative position near blacksmith")
+                town_salvage_task.current_state = salvage_state.INTERACTING_WITH_BLACKSMITH
+                return
+            end
+        end
+        
+        console.print("Failed to reach blacksmith or alternative positions")
         town_salvage_task.current_retries = town_salvage_task.current_retries + 1
-        explorer:set_custom_target(enums.positions.blacksmith_position)
-        explorer:move_to_target()
     end
 end
 
@@ -216,7 +232,7 @@ function town_salvage_task.salvage_items()
     
     local current_time = get_time_since_inject()
     
-    if not town_salvage_task.interaction_time or current_time - town_salvage_task.interaction_time >= 5 then
+    if not town_salvage_task.interaction_time or current_time - town_salvage_task.interaction_time >= 1 then
         if not town_salvage_task.last_salvage_time then
             salvage_low_greater_affix_items()
             town_salvage_task.last_salvage_time = current_time
@@ -225,16 +241,16 @@ function town_salvage_task.salvage_items()
             local item_count = get_local_player():get_item_count()
             console.print("Current item count: " .. item_count)
             
-            if item_count <= 25 then
+            if item_count <= 19 then
                 tracker.has_salvaged = true
-                tracker.needs_salvage = true
-                console.print("Salvage complete, item count is 15 or less. Moving to portal")
-                town_salvage_task.current_state = salvage_state.MOVING_TO_PORTAL
+                tracker.needs_salvage = false
+                console.print("Salvage complete, item count is 25 or less. Finishing task.")
+                town_salvage_task.finish_salvage()
             else
-                console.print("Item count is still above 15, retrying salvage")
+                console.print("Item count is still above 25, retrying salvage")
                 town_salvage_task.current_retries = town_salvage_task.current_retries + 1
                 if town_salvage_task.current_retries >= town_salvage_task.max_retries then
-                    console.print("Max retries reached numb2. Resetting task.")
+                    console.print("Max retries reached. Resetting task.")
                     town_salvage_task.reset()
                 else
                     town_salvage_task.last_salvage_time = nil  -- Reset this to allow immediate salvage on next cycle
@@ -250,8 +266,8 @@ end
 function town_salvage_task.move_to_portal()
     tracker:set_boss_task_running(false)
     console.print("Moving to portal")
-    explorer:set_custom_target(enums.positions.portal_position)
-    explorer:move_to_target()
+    explorerlite:set_custom_target(enums.positions.portal_position)
+    explorerlite:move_to_target()
     if utils.distance_to(enums.positions.portal_position) < 5 then
         console.print("Reached portal")
         town_salvage_task.current_state = salvage_state.INTERACTING_WITH_PORTAL
@@ -308,9 +324,8 @@ end
 function town_salvage_task.finish_salvage()
     console.print("Finishing salvage task")
     tracker.has_salvaged = true
-    tracker.needs_salvage = true
-    town_salvage_task.current_state = salvage_state.MOVING_TO_PORTAL
-    town_salvage_task.current_retries = 0
+    tracker.needs_salvage = false
+    town_salvage_task.reset()
     console.print("Town salvage task finished")
 end
 
@@ -321,7 +336,7 @@ function town_salvage_task.reset()
     town_salvage_task.reset_salvage_time = 0
     town_salvage_task.current_retries = 0
     tracker:set_boss_task_running(true)
-    explorer.is_task_running = false
+    explorerlite.is_task_running = false
     console.print("Reset town_salvage_task and related tracker flags")
 end
 

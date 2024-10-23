@@ -60,6 +60,7 @@ local task_files = {
     --"exit_pit",    -- Place exit_pit immediately after finish_pit
     "explore_pit",
     "town_salvage",
+    "town_obol",
     "town_sell",
     "town_repaair",
     "open_pit"

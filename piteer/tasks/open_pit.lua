@@ -3,7 +3,7 @@ local enums      = require "data.enums"
 local navigation = require "core.navigation"
 local settings   = require "core.settings"
 local tracker    = require "core.tracker"
-local explorer   = require "core.explorer"
+local explorerlite   = require "core.explorerlite"
 local pitLevels  = require "data.pitlevels"
 
 local last_open  = 0
@@ -12,7 +12,7 @@ local last_open  = 0
 local function reset_pit_values()
     tracker.finished_time = 0
     tracker.pit_start_time = 0
-    explorer.is_task_running = false
+    explorerlite.is_task_running = false
     tracker:set_boss_task_running(false)
     -- Reset last_reset in exit_pit.lua
     -- Since we can't directly access variables in other files,
@@ -27,24 +27,12 @@ local function set_height_of_valid_position(point)
     return utility.set_height_of_valid_position(point)
 end
 
-local function move_to_random_point_3_units_away()
-    local player_pos = get_player_position()
-    local angle = math.random() * 2 * math.pi
-    local random_point = vec3:new(
-        player_pos:x() + 3 * math.cos(angle),
-        player_pos:y() + 3 * math.sin(angle),
-        player_pos:z()
+local function set_offset_target(original_position, offset)
+    return vec3:new(
+        original_position:x() + offset,
+        original_position:y() + offset,
+        original_position:z()
     )
-    random_point = set_height_of_valid_position(random_point) -- Correctly reference the function
-
-    if utility.is_point_walkeable(random_point) then
-        explorer:set_custom_target(random_point)
-        explorer:move_to_target()
-        return true
-    else
-        console.print("Random point is not walkable.")
-        return false
-    end
 end
 
 local task = {
@@ -54,9 +42,8 @@ local task = {
     end,
     Execute = function()
         console.print("Executing the task: Open Pit.")
-        explorer.reset_exploration()  -- This should now work correctly
+        --explorerlite:reset_exploration()
         
-        -- Add this line to reset all necessary values
         reset_pit_values()
         
         tracker.pit_start_time = get_time_since_inject()
@@ -67,12 +54,13 @@ local task = {
 
         local obelisk = utils.get_obelisk()
         if obelisk then
+            local obelisk_position = obelisk:get_position()
             console.print("Setting target to obelisk.")
-            explorer:set_custom_target(enums.positions.obelisk_position)
-            explorer:move_to_target()
+            explorerlite:set_custom_target(obelisk_position)
+            explorerlite:move_to_target()
 
             -- Check distance to obelisk after moving to target
-            if utils.distance_to(obelisk) < 3 then
+            if utils.distance_to(obelisk) < 2 then
                 console.print("Interacting with obelisk.")
                 loot_manager.interact_with_object(obelisk)
 
@@ -83,20 +71,23 @@ local task = {
 
                     utility.open_pit_portal(actual_address)
                     last_open = get_time_since_inject()
-                    explorer.is_task_running = false
+                    explorerlite.is_task_running = false
                 end
-            else
+            elseif utils.distance_to(obelisk) < 4 then
                 console.print("Not close enough to interact with obelisk.")
+                local offset_position = set_offset_target(enums.positions.obelisk_position, 0.1)
+                console.print("Setting new target slightly offset from obelisk.")
+                explorerlite:set_custom_target(offset_position)
+                explorerlite:move_to_target()
+            else
+                console.print("Too far from obelisk. Moving closer.")
+                explorerlite:set_custom_target(obelisk_position)
+                explorerlite:move_to_target()
             end
         else
             console.print("Obelisk not found. Pathfinding to obelisk position.")
-            explorer:set_custom_target(enums.positions.obelisk_position)
-            explorer:move_to_target()
-        end
-
-        -- Move to a random point 3 units away from the player position
-        if not move_to_random_point_3_units_away() then
-            console.print("Failed to move to a random point 3 units away.")
+            explorerlite:set_custom_target(enums.positions.obelisk_position)
+            explorerlite:move_to_target()
         end
     end
 }

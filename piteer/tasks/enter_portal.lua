@@ -35,6 +35,7 @@ local task  = {
                 if distance_to_portal < 2 then
                     -- console.print("Player is close enough to the portal. Interacting with the portal.")
                     interact_object(portal)
+                    explorer.reset_exploration()
                     tracker.start_location_reached = false
                     -- console.print("Set tracker.start_location_reached to false")
                     portal_interaction_time = get_time_since_inject()
