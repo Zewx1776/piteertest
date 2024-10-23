@@ -112,7 +112,11 @@ local uber_table = { -- Should be all uber items :)
     { name = "Doombringer", sno = 221017 },
     { name = "Harlequin Crest", sno = 609820 },
     { name = "Melted Heart of Selig", sno = 1275935 },
-    { name = "‍Ring of Starless Skies", sno = 1306338 }
+    { name = "‍Ring of Starless Skies", sno = 1306338 },
+    { name = "Shroud of False Death", sno = 2059803 },
+    { name = "Nesekem, the Herald", sno = 1982241 },
+    { name = "Heir of Perdition", sno = 2059799 },
+    { name = "Shattered Vow", sno = 2059813 }
 }
 
 function utils.is_uber_item(sno_to_check)
