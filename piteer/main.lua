@@ -12,9 +12,11 @@ local function update_locals()
 end
 
 local function main_pulse()
-
     settings:update_settings()
     if not local_player or not settings.enabled then return end
+    if orbwalker.get_orb_mode() ~= 3 then
+        orbwalker.set_clear_toggle(true);
+    end
     task_manager.execute_tasks()
 end
 
