@@ -23,7 +23,7 @@ local task = {
         local obols = player:get_obols()
         console.print("Checking shouldExecute: Obols = " .. obols .. ", Is running = " .. tostring(is_running))
         if not is_running then
-            local should_start = utils.player_in_zone("Scos_Cerrigar") and obols > 1500
+            local should_start = utils.player_in_zone("Scos_Cerrigar") and obols > 1000
             console.print("Should start task: " .. tostring(should_start))
             return should_start
         else
@@ -58,27 +58,46 @@ local task = {
                     local vendor_items = loot_manager.get_vendor_items()
                     console.print("Vendor items type: " .. type(vendor_items))
 
-                    local item_count = vendor_items:size()
-                    console.print("Vendor items count: " .. item_count)
+                    -- Print information about the vendor_items object
+                    console.print("Printing vendor_items information:")
+                    if type(vendor_items) == "userdata" and vendor_items.size then
+                        local size = vendor_items:size()
+                        console.print("  Size: " .. tostring(size))
+                        
+                        local player_obols = get_local_player():get_obols()
+                        console.print("Player obols: " .. tostring(player_obols))
+                        
+                        local affordable_items = {}
+                        
+                        for i = 1, size do  -- Changed from 0 to 1, and from size-1 to size
+                            local item = vendor_items:get(i)
+                            if item then
+                                local display_name = item:get_display_name()
+                                local price = item:get_price()
+                                local skin_name = item:get_skin_name()
+                                local name = item:get_name()
+                                local sno_id = item:get_sno_id()
+                                console.print("Item " .. i .. ":")
+                                console.print("  Display Name: " .. tostring(display_name))
+                                console.print("  Skin Name: " .. tostring(skin_name))
+                                console.print("  Name: " .. tostring(name))
+                                console.print("  SNO ID: " .. tostring(sno_id))
+                                console.print("  Price: " .. tostring(price))
+                                console.print("  Player obols: " .. tostring(player_obols))
 
-                    for i = 0, item_count - 1 do
-                        local item = vendor_items:get(i)
-                        if item then
-                            local display_name = item:get_display_name()
-                            local price = item:get_price()
-                            local player_obols = get_local_player():get_obols()
-                            console.print("Item " .. i .. ": " .. display_name .. ", Price: " .. price .. ", Player obols: " .. player_obols)
-
-                            if display_name == settings.gamble_category and price <= player_obols then
-                                console.print("Attempting to buy " .. display_name)
-                                local success = loot_manager.buy_item(item)
-                                console.print("Buy attempt result: " .. tostring(success))
+                                if display_name == settings.gamble_category and price and player_obols and price <= player_obols then
+                                    console.print("Attempting to buy " .. tostring(display_name))
+                                    local success = loot_manager.buy_item(item)
+                                    console.print("Buy attempt result: " .. tostring(success))
+                                else
+                                    console.print("Skipping item: " .. tostring(display_name))
+                                end
                             else
-                                console.print("Skipping item: " .. display_name)
+                                console.print("Item " .. i .. " is nil")
                             end
-                        else
-                            console.print("Item " .. i .. " is nil")
                         end
+                    else
+                        console.print("Vendor items is not a userdata")
                     end
                 else
                     console.print("Vendor screen did not open. Skipping purchase.")
@@ -86,9 +105,17 @@ local task = {
             else
                 console.print("Player is too far from gambler. Setting new target slightly offset from gambler.")
                 local gambler_pos = gambler:get_position()
-                local offset_pos = vector3f.new(gambler_pos.x + 0.1, gambler_pos.y + 0.1, gambler_pos.z)
-                explorerlite:set_custom_target(offset_pos)
-                explorerlite:move_to_target()
+                -- Check if gambler_pos is a table with x, y, z fields
+                if type(gambler_pos) == "table" and type(gambler_pos.x) == "number" and type(gambler_pos.y) == "number" and type(gambler_pos.z) == "number" then
+                    local offset_pos = vec3:new(gambler_pos.x + 0.1, gambler_pos.y + 0.1, gambler_pos.z)
+                    explorerlite:set_custom_target(offset_pos)
+                    explorerlite:move_to_target()
+                else
+                    console.print("Error: Invalid gambler position")
+                    -- Set a default target or handle the error as appropriate
+                    explorerlite:set_custom_target(gambler)
+                    explorerlite:move_to_target()
+                end
             end
 
             return true
